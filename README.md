@@ -26,6 +26,19 @@ for trips departing from **New York (JFK / EWR)**.
 
 ## Quick start
 
+### 🐳 Option A — Docker (easiest; nothing but Docker required)
+
+Best for running on another laptop — no Python/Node install needed.
+
+```bash
+docker compose up --build      # from the project root
+# open http://localhost:8080
+```
+
+New to Docker? [`docs/DOCKER.md`](docs/DOCKER.md) teaches the concepts using these exact files.
+
+### Option B — run the two dev servers directly
+
 ```bash
 # 1. Backend (Python 3.10+)
 cd backend

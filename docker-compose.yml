@@ -1,0 +1,50 @@
+# ============================================================================
+#  Wanderlust Atlas — full stack in two containers.
+#
+#    docker compose up --build      # build images and run
+#    open http://localhost:8080
+#
+#  Runs with ZERO configuration (mock/keyless fallbacks). To go live, create a
+#  `.env` file next to this one (copy .env.example) — Compose auto-loads it and
+#  substitutes the ${...} values below. See docs/DOCKER.md.
+# ============================================================================
+services:
+  # ---- API: FastAPI + ML model -------------------------------------------
+  backend:
+    build: ./backend
+    image: wanderlust-backend
+    environment:
+      # Optional keys — default to empty so it runs with nothing configured.
+      AMADEUS_CLIENT_ID: ${AMADEUS_CLIENT_ID:-}
+      AMADEUS_CLIENT_SECRET: ${AMADEUS_CLIENT_SECRET:-}
+      AMADEUS_ENV: ${AMADEUS_ENV:-test}
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:-}
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
+      USE_MOCK_DATA: ${USE_MOCK_DATA:-false}
+      # Persist custom destinations onto the mounted volume (survives restarts).
+      CUSTOM_DEST_FILE: /app/persist/custom_destinations.json
+    volumes:
+      - wanderlust-data:/app/persist
+    expose:
+      - "8000"            # internal only — reached via the frontend proxy
+    restart: unless-stopped
+
+  # ---- Web: nginx serving the SPA + proxying /api ------------------------
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Vite bakes this in at build time; enables Google Satellite + Street View.
+        VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY:-}
+    image: wanderlust-frontend
+    ports:
+      - "${HOST_PORT:-8080}:80"     # visit http://localhost:8080
+    depends_on:
+      backend:
+        condition: service_healthy  # wait until the API passes its healthcheck
+    restart: unless-stopped
+
+# Named volume => custom destinations persist across `down`/`up` (until you run
+# `docker compose down -v`).
+volumes:
+  wanderlust-data:

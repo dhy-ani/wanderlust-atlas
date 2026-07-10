@@ -1,0 +1,8 @@
+# Keep the build context small & the image clean.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+data/models/*.joblib          # retrained inside the image
+data/custom_destinations.json # host runtime state, not baked in
+*.md

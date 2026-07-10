@@ -9,13 +9,16 @@ automatically, because every service resolves coordinates + airport via `by_id`.
 from __future__ import annotations
 
 import json
+import os
 from functools import lru_cache
 from math import asin, cos, radians, sin, sqrt
 from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 DATA_PATH = DATA_DIR / "destinations.json"
-CUSTOM_PATH = DATA_DIR / "custom_destinations.json"
+# Where user-added destinations are persisted. Overridable via env so it can point
+# at a mounted Docker volume (see docker-compose.yml -> CUSTOM_DEST_FILE).
+CUSTOM_PATH = Path(os.environ.get("CUSTOM_DEST_FILE", str(DATA_DIR / "custom_destinations.json")))
 
 # New York origin airports the whole app prices from.
 NYC_ORIGINS = {"JFK": (40.6413, -73.7781), "EWR": (40.6895, -74.1745)}
@@ -41,6 +44,7 @@ def _load_custom() -> None:
 
 
 def _save_custom() -> None:
+    CUSTOM_PATH.parent.mkdir(parents=True, exist_ok=True)  # volume dir may be empty
     CUSTOM_PATH.write_text(json.dumps(list(_custom.values()), indent=2), encoding="utf-8")
 
 
