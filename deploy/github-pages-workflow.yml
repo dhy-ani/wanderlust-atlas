@@ -1,0 +1,59 @@
+# Builds the frontend in "static mode" (no backend) and publishes it to GitHub
+# Pages. Enable once in: repo Settings -> Pages -> Source = "GitHub Actions".
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:        # lets you trigger it manually from the Actions tab
+
+# Permissions the deploy-pages action needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deploy at a time; newer pushes cancel in-progress runs.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      - name: Build (static mode)
+        run: npm run build
+        env:
+          VITE_STATIC: "1"                               # use the client-side api
+          VITE_BASE: "/${{ github.event.repository.name }}/"   # e.g. /wanderlust-atlas/
+          # Optional: add a repo secret named VITE_GOOGLE_MAPS_API_KEY to enable
+          # Google Satellite + Street View on the live site.
+          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

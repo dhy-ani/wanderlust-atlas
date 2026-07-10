@@ -2,6 +2,11 @@
 // JSON or throws. The backend already falls back to mock data, so the UI never
 // has to special-case "no keys".
 import { API_BASE } from './config.js';
+import { staticApi } from './staticApi.js';
+
+// On GitHub Pages there is no backend, so builds with VITE_STATIC=1 use a
+// client-side implementation (staticApi) with the identical interface.
+const USE_STATIC = import.meta.env.VITE_STATIC === '1' || import.meta.env.VITE_STATIC === 'true';
 
 async function get(path, params = {}) {
   const qs = new URLSearchParams(params).toString();
@@ -21,7 +26,7 @@ async function post(path, body) {
   return res.json();
 }
 
-export const api = {
+const realApi = {
   health: () => get('/health'),
   destinations: () => get('/destinations'),
   addDestination: (dest) => post('/destinations', dest),
@@ -40,3 +45,5 @@ export const api = {
   planRoute: (stops, optimize = false, roundTrip = false) =>
     post('/routes/plan', { stops, optimize, round_trip: roundTrip }),
 };
+
+export const api = USE_STATIC ? staticApi : realApi;

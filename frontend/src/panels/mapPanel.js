@@ -5,8 +5,15 @@
 // in either mode.
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+// Bundle Leaflet's default marker images so they resolve correctly in a Vite
+// production build (and under the GitHub Pages base path).
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import { GOOGLE_MAPS_KEY } from '../config.js';
 import { api } from '../api.js';
+
+L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, shadowUrl: markerShadow });
 
 let googlePromise = null;
 function loadGoogle() {
