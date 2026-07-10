@@ -6,6 +6,8 @@ drawn as dashed lines across the map, and get **live flight prices**, **weather
 comfort scores**, and **machine-learning price predictions** ("book now vs. wait")
 for trips departing from **New York (JFK / EWR)**.
 
+**🌐 Live demo: https://dhy-ani.github.io/wanderlust-atlas/** (runs backend-free in "static mode" — see [docs/DEPLOY.md](docs/DEPLOY.md))
+
 ![stack](https://img.shields.io/badge/backend-FastAPI-009688) ![stack](https://img.shields.io/badge/frontend-Vite%20%2B%20Three.js-646cff) ![ml](https://img.shields.io/badge/ML-scikit--learn-f7931e)
 
 ---
