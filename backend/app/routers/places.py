@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Query
 
 from app.models.schemas import PlacesResponse
-from app.services.places_client import search_places
+from app.services.places_client import geocode, search_places
 
 router = APIRouter(prefix="/api/places", tags=["places"])
 
@@ -15,3 +15,8 @@ async def places_search(
     radius_m: int = Query(40000, ge=500, le=200000),
 ):
     return await search_places(q.strip(), lat, lng, radius_m)
+
+
+@router.get("/geocode", response_model=PlacesResponse)
+async def places_geocode(q: str = Query(..., min_length=1, description="place name to locate worldwide")):
+    return await geocode(q.strip())

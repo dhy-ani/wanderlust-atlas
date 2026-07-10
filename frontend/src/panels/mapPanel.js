@@ -25,7 +25,7 @@ function loadGoogle() {
   return googlePromise;
 }
 
-export function initMapPanel({ onPinGlobe, onAddRoute }) {
+export function initMapPanel({ onPinGlobe, onAddRoute, onAddDestination }) {
   const modal = document.getElementById('mapModal');
   const mapEl = document.getElementById('mapCanvas');
   const svEl = document.getElementById('streetView');
@@ -125,6 +125,7 @@ export function initMapPanel({ onPinGlobe, onAddRoute }) {
             <button data-act="focus" data-i="${i}" title="Show on map">🗺️</button>
             <button data-act="pin" data-i="${i}" title="Pin on globe">📍</button>
             <button data-act="route" data-i="${i}" title="Add to route">➕</button>
+            <button data-act="dest" data-i="${i}" title="Add as destination">⭐</button>
           </div>
         </div>`).join('');
       listEl.querySelectorAll('button').forEach((btn) => {
@@ -134,6 +135,7 @@ export function initMapPanel({ onPinGlobe, onAddRoute }) {
           if (act === 'focus') focusPlace(p);
           if (act === 'pin') onPinGlobe(p);
           if (act === 'route') onAddRoute({ id: 'place:' + p.name, name: p.name, lat: p.lat, lng: p.lng });
+          if (act === 'dest') onAddDestination(p);
         };
       });
     } catch (e) {

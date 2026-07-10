@@ -15,6 +15,9 @@ venv/
 # --- trained ML artifacts (regenerate with `python -m app.ml.train`) ---
 backend/data/models/*.joblib
 
+# --- user-added custom destinations (runtime state) ---
+backend/data/custom_destinations.json
+
 # --- node / vite ---
 node_modules/
 frontend/dist/

@@ -24,6 +24,10 @@ async function post(path, body) {
 export const api = {
   health: () => get('/health'),
   destinations: () => get('/destinations'),
+  addDestination: (dest) => post('/destinations', dest),
+  deleteDestination: (id) =>
+    fetch(`${API_BASE}/api/destinations/${encodeURIComponent(id)}`, { method: 'DELETE' }).then((r) => r.json()),
+  geocode: (q) => get('/places/geocode', { q }),
   flights: (destId, origin = 'JFK', depart) =>
     get('/flights', depart ? { dest_id: destId, origin, depart } : { dest_id: destId, origin }),
   weather: (destId) => get(`/weather/${destId}`),

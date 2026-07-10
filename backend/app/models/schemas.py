@@ -84,6 +84,7 @@ class Place(BaseModel):
     lng: float
     category: Optional[str] = None
     address: Optional[str] = None
+    country: Optional[str] = None
     rating: Optional[float] = None
     source: Literal["google", "nominatim", "mock"] = "mock"
 

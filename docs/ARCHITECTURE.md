@@ -40,6 +40,20 @@ so the browser only ever talks to one origin and there is no CORS friction.
 3. `globe.setRoute(stops)` draws dashed great-circle `THREE.Line`s just above the
    globe surface (`globe/routes.js`).
 
+## Request flow: adding a custom destination
+
+1. User opens **＋ Add Destination**, types a name → `GET /api/places/geocode` (unbounded
+   worldwide search: Google Text Search when keyed, else OSM/Nominatim).
+2. Picking a result posts it to `POST /api/destinations`. The backend slugifies an id,
+   fills in the **nearest airport** (`nearest_airport`), applies sensible defaults, and
+   **persists** it to `data/custom_destinations.json`.
+3. The frontend adds a nav item + globe pin and selects it. Because every service
+   resolves coordinates/airport via `by_id` (which now also checks the custom registry),
+   flights, weather, ML prediction and routes work for it **immediately** — no special
+   casing. On the next page load, `main.js` re-fetches `GET /api/destinations` and
+   restores any custom entries, so they survive reloads. Custom destinations can also be
+   removed (`DELETE /api/destinations/{id}`); built-ins cannot.
+
 ## Why the mock fallback matters
 
 Every third-party dependency is optional and isolated in one service file. That gives

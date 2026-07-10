@@ -16,7 +16,8 @@ for trips departing from **New York (JFK / EWR)**.
 |---|---|
 | Real satellite 3D globe + Google-style pins | `frontend/src/globe/` |
 | 2D detail map with **Satellite + Street View** | `frontend/src/panels/mapPanel.js` |
-| Search nearby famous places / add manually | `frontend/src/search/places.js` + `backend/.../places.py` |
+| Search nearby famous places / add manually | `frontend/src/panels/mapPanel.js` + `backend/.../places.py` |
+| **Add any place as a destination** (geocoded, persisted) | `frontend/src/panels/addDestination.js` + `backend/.../destinations.py` |
 | Remove destinations & suggestions | `frontend/src/panels/*` |
 | **Live flight prices** from JFK / EWR | `backend/app/services/amadeus_client.py` |
 | **Weather** best-time scoring | `backend/app/services/weather_client.py` |

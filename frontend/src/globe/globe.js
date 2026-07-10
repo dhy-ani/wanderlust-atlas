@@ -66,16 +66,18 @@ export function initGlobe(canvas, { onSelect } = {}) {
   let selectedId = null;
   let routeGroup = null;
 
-  // --- add the fixed destination pins ---
-  function addDestinations(list) {
-    list.forEach((d) => {
-      const { mesh, ring } = pins.create(d.lat, d.lng);
-      mesh.userData.id = d.id;
-      globeGroup.add(mesh);
-      globeGroup.add(ring);
-      pinMeshes.push({ mesh, id: d.id, ring });
-    });
+  // --- destination pins (built-in + custom) ---
+  const destCoords = new Map();
+
+  function addDestination(d) {
+    const { mesh, ring } = pins.create(d.lat, d.lng);
+    mesh.userData.id = d.id;
+    globeGroup.add(mesh);
+    globeGroup.add(ring);
+    pinMeshes.push({ mesh, id: d.id, ring });
+    destCoords.set(d.id, [d.lat, d.lng]);
   }
+  function addDestinations(list) { list.forEach(addDestination); }
 
   // --- add a transient custom/search pin (amber) ---
   function addCustomPin(lat, lng, id) {
@@ -94,6 +96,7 @@ export function initGlobe(canvas, { onSelect } = {}) {
     const { mesh, ring } = pinMeshes[idx];
     globeGroup.remove(mesh, ring);
     pinMeshes.splice(idx, 1);
+    destCoords.delete(id);
   }
 
   // --- draw / clear a dashed route through ordered stops [{lat,lng}] ---
@@ -117,10 +120,9 @@ export function initGlobe(canvas, { onSelect } = {}) {
 
   function select(id) {
     selectedId = id;
-    const d = pinMeshes.find((p) => p.id === id);
-    if (d) focusOn(...coordOf(id));
+    if (destCoords.has(id)) focusOn(...coordOf(id));
   }
-  function coordOf() { return [0, 0]; } // patched below once destinations known
+  function coordOf(id) { return destCoords.get(id) || [0, 0]; }
 
   // ---- interaction ----
   let isDragging = false, dragged = false, autoSpin = true;
@@ -178,11 +180,7 @@ export function initGlobe(canvas, { onSelect } = {}) {
   animate();
 
   return {
-    addDestinations(list) {
-      addDestinations(list);
-      // patch coordOf now that we know coordinates
-      coordOf = (id) => { const d = list.find((x) => x.id === id); return d ? [d.lat, d.lng] : [0, 0]; };
-    },
+    addDestinations, addDestination,
     addCustomPin, removePin, setRoute, focusOn, select,
     setSelected(id) { selectedId = id; },
   };

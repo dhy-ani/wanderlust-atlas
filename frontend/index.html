@@ -28,6 +28,7 @@
   <div id="hint">drag to rotate · click a pin to explore</div>
 
   <div class="toolbar">
+    <button id="addDestToggle">＋ Add Destination</button>
     <button id="routeToggle">🧭 Route Planner <span class="badge" id="routeBadge">0</span></button>
     <button id="bucketToggle">✦ Bucket List <span class="badge" id="bucketBadge">0</span></button>
   </div>
@@ -62,6 +63,22 @@
     <div class="drawerBody">
       <div class="yearsCol" id="yearsCol"></div>
       <div class="summaryCol" id="summaryCol"></div>
+    </div>
+  </div>
+
+  <!-- Add Destination modal -->
+  <div id="addDestModal">
+    <div class="addDestBox">
+      <div class="addDestHead">
+        <h3>＋ Add a Destination</h3>
+        <button class="closeBtn dark" id="closeAddDest">✕</button>
+      </div>
+      <p class="addDestHint">Search any place in the world. Adding it drops a pin on the globe and gives it live flights, ML price forecasts, weather &amp; bucket-list planning.</p>
+      <div class="searchRow">
+        <input id="addSearchInput" placeholder="e.g. Kyoto, Petra, Banff…" />
+        <button id="addSearchBtn">Search</button>
+      </div>
+      <div id="addResults" class="placeResults"></div>
     </div>
   </div>
 

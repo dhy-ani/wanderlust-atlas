@@ -174,3 +174,13 @@ export const DESTINATIONS = [
 ];
 
 export const byId = (id) => DESTINATIONS.find((d) => d.id === id);
+
+// Runtime (custom) destinations added by the user via "add to destinations".
+export function addRuntimeDestination(d) {
+  if (!DESTINATIONS.some((x) => x.id === d.id)) DESTINATIONS.push(d);
+  return d;
+}
+export function removeRuntimeDestination(id) {
+  const i = DESTINATIONS.findIndex((x) => x.id === id);
+  if (i >= 0) DESTINATIONS.splice(i, 1);
+}

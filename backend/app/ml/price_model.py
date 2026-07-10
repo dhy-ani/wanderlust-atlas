@@ -23,7 +23,7 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from app.services.destinations import NYC_ORIGINS, all_destinations, by_id, haversine_km
+from app.services.destinations import NYC_ORIGINS, by_id, haversine_km, static_destinations
 
 MODEL_PATH = Path(__file__).resolve().parents[2] / "data" / "models" / "price_model.joblib"
 
@@ -66,7 +66,7 @@ def build_dataset(samples_per_dest: int = 900, seed: int = 7) -> pd.DataFrame:
     """Sample simulate_price() across months/lead-times/origins with noise."""
     rng = np.random.default_rng(seed)
     rows = []
-    for dest in all_destinations():
+    for dest in static_destinations():
         for _ in range(samples_per_dest):
             origin = rng.choice(list(NYC_ORIGINS))
             month = int(rng.integers(1, 13))

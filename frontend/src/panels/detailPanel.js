@@ -5,7 +5,7 @@ import { renderFlights, renderPrediction, renderBestTime } from './flightPanel.j
 
 const YEARS = [2026, 2027, 2028, 2029, 2030, 2031, 2032];
 
-export function initDetailPanel({ onAddBucket, onAddRoute, onOpenMap, onSearchNearby, getBucketYears }) {
+export function initDetailPanel({ onAddBucket, onAddRoute, onOpenMap, onSearchNearby, onRemoveDestination, getBucketYears }) {
   const panel = document.getElementById('detailPanel');
   const scroll = document.getElementById('panelScroll');
   document.getElementById('closeDetail').onclick = () => panel.classList.remove('open');
@@ -15,15 +15,31 @@ export function initDetailPanel({ onAddBucket, onAddRoute, onOpenMap, onSearchNe
   function open(dest) {
     current = dest;
     const takenYears = getBucketYears(dest.id);
+    const attractions = dest.attractions || [];
+    const activities = dest.activities || [];
+    const famous = dest.famous || [];
+
+    const contentHtml = attractions.length || activities.length || famous.length
+      ? `${attractions.length ? `<div class="sectionTitle">Must-Visit Spots, Ranked</div>
+          ${attractions.map((a, i) => `<div class="attrItem"><div class="attrRank">${i + 1}</div>
+            <div><div class="attrName">${a.name}</div><div class="attrDesc">${a.desc}</div></div></div>`).join('')}` : ''}
+         ${activities.length ? `<div class="sectionTitle">Top Activities</div>
+          <div class="pillList">${activities.map((a) => `<div class="pill">${a}</div>`).join('')}</div>` : ''}
+         ${famous.length ? `<div class="sectionTitle">Famous For</div>
+          <div class="pillList">${famous.map((a) => `<div class="pill famousPill">${a}</div>`).join('')}</div>` : ''}`
+      : `<div class="customNote">✨ Your custom destination. Live flights, prices &amp; weather are above.
+           Use <b>🔍 Nearby places</b> to explore what's around it.</div>`;
+
     scroll.innerHTML = `
-      <div class="eyebrow">${dest.country} · ✈ ${dest.airport}</div>
+      <div class="eyebrow">${dest.country} · ✈ ${dest.airport}${dest.custom ? ' · custom' : ''}</div>
       <h2>${dest.name}</h2>
-      <div class="tagline">${dest.tagline}</div>
+      ${dest.tagline ? `<div class="tagline">${dest.tagline}</div>` : ''}
 
       <div class="actionBar">
         <button class="actBtn" id="btnMap">🛰️ Map / Street View</button>
         <button class="actBtn" id="btnRoute">➕ Add to route</button>
         <button class="actBtn" id="btnNearby">🔍 Nearby places</button>
+        ${dest.custom ? '<button class="actBtn danger" id="btnRemove">🗑️ Remove</button>' : ''}
       </div>
 
       <div class="metaRow">
@@ -34,16 +50,7 @@ export function initDetailPanel({ onAddBucket, onAddRoute, onOpenMap, onSearchNe
 
       <div id="liveIntel" class="liveIntel"><div class="loading">Loading live flights, prices &amp; weather…</div></div>
 
-      <div class="sectionTitle">Must-Visit Spots, Ranked</div>
-      ${dest.attractions.map((a, i) => `
-        <div class="attrItem"><div class="attrRank">${i + 1}</div>
-          <div><div class="attrName">${a.name}</div><div class="attrDesc">${a.desc}</div></div></div>`).join('')}
-
-      <div class="sectionTitle">Top Activities</div>
-      <div class="pillList">${dest.activities.map((a) => `<div class="pill">${a}</div>`).join('')}</div>
-
-      <div class="sectionTitle">Famous For</div>
-      <div class="pillList">${dest.famous.map((a) => `<div class="pill famousPill">${a}</div>`).join('')}</div>
+      ${contentHtml}
 
       <div class="addBucketBox">
         <label>Add to bucket list for</label>
@@ -60,6 +67,14 @@ export function initDetailPanel({ onAddBucket, onAddRoute, onOpenMap, onSearchNe
     document.getElementById('btnMap').onclick = () => onOpenMap(dest);
     document.getElementById('btnRoute').onclick = () => onAddRoute(dest);
     document.getElementById('btnNearby').onclick = () => onSearchNearby(dest);
+    if (dest.custom) {
+      document.getElementById('btnRemove').onclick = () => {
+        if (confirm(`Remove "${dest.name}" from your destinations?`)) {
+          onRemoveDestination(dest);
+          panel.classList.remove('open');
+        }
+      };
+    }
     document.getElementById('addBucketBtn').onclick = () => {
       const year = parseInt(document.getElementById('yearSelect').value, 10);
       const budget = parseFloat(document.getElementById('budgetInput').value) || 0;

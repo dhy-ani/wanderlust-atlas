@@ -61,6 +61,50 @@ async def _nominatim(query: str, lat: float, lng: float) -> list[Place]:
         return out
 
 
+async def geocode(query: str) -> PlacesResponse:
+    """Unbounded, worldwide place lookup (for 'add any destination by name').
+    Google Text Search when keyed, else keyless OSM/Nominatim."""
+    s = get_settings()
+    if s.has_places:
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                r = await client.get(
+                    "https://maps.googleapis.com/maps/api/place/textsearch/json",
+                    params={"query": query, "key": s.google_places_api_key},
+                )
+                r.raise_for_status()
+                out = []
+                for p in r.json().get("results", [])[:8]:
+                    loc = p["geometry"]["location"]
+                    out.append(Place(name=p.get("name", "?"), lat=loc["lat"], lng=loc["lng"],
+                                     address=p.get("formatted_address"),
+                                     country=(p.get("formatted_address", "").split(",")[-1].strip() or None),
+                                     rating=p.get("rating"), source="google"))
+                if out:
+                    return PlacesResponse(query=query, results=out, source="google")
+        except Exception as exc:
+            print(f"[google-geocode] fallback: {exc}")
+    try:
+        async with httpx.AsyncClient(timeout=15, headers={"User-Agent": "wanderlust-atlas/1.0"}) as client:
+            r = await client.get(
+                "https://nominatim.openstreetmap.org/search",
+                params={"q": query, "format": "jsonv2", "limit": 8, "addressdetails": 1},
+            )
+            r.raise_for_status()
+            out = []
+            for p in r.json():
+                addr = p.get("address", {})
+                out.append(Place(
+                    name=p.get("display_name", "").split(",")[0], lat=float(p["lat"]), lng=float(p["lon"]),
+                    category=p.get("type"), address=p.get("display_name"),
+                    country=addr.get("country"), source="nominatim"))
+            if out:
+                return PlacesResponse(query=query, results=out, source="nominatim")
+    except Exception as exc:
+        print(f"[nominatim-geocode] fallback to mock: {exc}")
+    return PlacesResponse(query=query, results=mock_places(query, 20, 0), source="mock")
+
+
 async def search_places(query: str, lat: float, lng: float, radius_m: int = 40000) -> PlacesResponse:
     s = get_settings()
     if s.has_places:
