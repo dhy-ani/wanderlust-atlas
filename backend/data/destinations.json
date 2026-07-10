@@ -1,0 +1,17 @@
+[
+  {"id":"chongqing","name":"Chongqing","country":"China","lat":29.5630,"lng":106.5516,"airport":"CKG","days":3,"budgetLow":60,"budgetHigh":90,"bestTime":"Mar–May, Sep–Nov"},
+  {"id":"hawaii","name":"Hawaiian Mountains","country":"USA · Big Island","lat":19.8968,"lng":-155.5828,"airport":"KOA","days":5,"budgetLow":150,"budgetHigh":250,"bestTime":"Apr–Jun, Sep–Oct"},
+  {"id":"italy","name":"Italy","country":"Rome · Florence · Venice","lat":41.9028,"lng":12.4964,"airport":"FCO","days":10,"budgetLow":120,"budgetHigh":200,"bestTime":"Apr–Jun, Sep–Oct"},
+  {"id":"paris","name":"Paris","country":"France","lat":48.8566,"lng":2.3522,"airport":"CDG","days":5,"budgetLow":130,"budgetHigh":220,"bestTime":"Apr–Jun, Sep–Oct"},
+  {"id":"switzerland","name":"Switzerland — Lindt Factory","country":"Kilchberg","lat":47.3175,"lng":8.5410,"airport":"ZRH","days":3,"budgetLow":180,"budgetHigh":280,"bestTime":"Jun–Sep"},
+  {"id":"rio","name":"Rio de Janeiro","country":"Brazil","lat":-22.9068,"lng":-43.1729,"airport":"GIG","days":5,"budgetLow":80,"budgetHigh":140,"bestTime":"Dec–Mar"},
+  {"id":"georgia","name":"Georgia","country":"Tbilisi · Kazbegi","lat":41.7151,"lng":44.8271,"airport":"TBS","days":6,"budgetLow":50,"budgetHigh":80,"bestTime":"May–Jun, Sep–Oct"},
+  {"id":"dubai","name":"Dubai","country":"UAE","lat":25.2048,"lng":55.2708,"airport":"DXB","days":4,"budgetLow":150,"budgetHigh":250,"bestTime":"Nov–Mar"},
+  {"id":"tokyo","name":"Tokyo","country":"Japan","lat":35.6762,"lng":139.6503,"airport":"HND","days":6,"budgetLow":100,"budgetHigh":180,"bestTime":"Mar–May, Oct–Nov"},
+  {"id":"fuji","name":"Mt Fuji","country":"Japan","lat":35.3606,"lng":138.7274,"airport":"HND","days":2,"budgetLow":90,"budgetHigh":150,"bestTime":"Jul–Sep (climbing)"},
+  {"id":"jaipur","name":"Jaipur","country":"India · Rajasthan","lat":26.9124,"lng":75.7873,"airport":"JAI","days":3,"budgetLow":40,"budgetHigh":70,"bestTime":"Oct–Mar"},
+  {"id":"ooty","name":"Ooty","country":"India · Nilgiris","lat":11.4064,"lng":76.6932,"airport":"CJB","days":3,"budgetLow":30,"budgetHigh":50,"bestTime":"Oct–Jun"},
+  {"id":"himalayas","name":"Himalayas","country":"Nepal · Everest Region","lat":27.9881,"lng":86.9250,"airport":"KTM","days":12,"budgetLow":50,"budgetHigh":100,"bestTime":"Mar–May, Sep–Nov"},
+  {"id":"ranthambore","name":"Ranthambore","country":"India · Rajasthan","lat":26.0173,"lng":76.5026,"airport":"JAI","days":2,"budgetLow":60,"budgetHigh":100,"bestTime":"Oct–Jun"},
+  {"id":"sanfrancisco","name":"San Francisco","country":"USA · California","lat":37.7749,"lng":-122.4194,"airport":"SFO","days":4,"budgetLow":150,"budgetHigh":220,"bestTime":"Sep–Nov"}
+]

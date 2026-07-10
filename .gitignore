@@ -1,0 +1,27 @@
+# --- secrets ---
+.env
+*.env
+!.env.example
+
+# --- python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# --- trained ML artifacts (regenerate with `python -m app.ml.train`) ---
+backend/data/models/*.joblib
+
+# --- node / vite ---
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# --- editors / os ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
