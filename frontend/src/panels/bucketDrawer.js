@@ -13,12 +13,24 @@ export function initBucketDrawer() {
   document.getElementById('bucketToggle').onclick = () => drawer.classList.add('open');
   document.getElementById('closeDrawer').onclick = () => drawer.classList.remove('open');
 
-  function add(dest, year, budget) {
-    bucket.push({ destId: dest.id, name: dest.name, country: dest.country, year, budget, days: dest.days });
+  function add(dest, year, budget, days = dest.days) {
+    bucket.push({ destId: dest.id, name: dest.name, country: dest.country, year, budget, days });
     render();
   }
   function remove(idx) { bucket.splice(idx, 1); render(); }
   function yearsFor(destId) { return bucket.filter((b) => b.destId === destId).map((b) => b.year); }
+
+  // Editing days scales the budget proportionally (same $/day rate), so a 3-day
+  // trip stretched to 5 days keeps its per-day cost instead of silently overspending.
+  function setDays(idx, newDays) {
+    const item = bucket[idx];
+    if (!item) return;
+    newDays = Math.max(1, Math.min(60, parseInt(newDays, 10) || item.days));
+    const perDay = item.days > 0 ? item.budget / item.days : 0;
+    item.budget = Math.round(perDay * newDays);
+    item.days = newDays;
+    render();
+  }
 
   function render() {
     statCount.textContent = bucket.length;
@@ -41,11 +53,17 @@ export function initBucketDrawer() {
         <div class="yearTitle"><span>${y}</span><span>$${subtotal.toLocaleString()}</span></div>
         ${items.map((it) => `<div class="bucketCard">
           <div><div class="bcName">${it.name}</div>
-          <div class="bcMeta">${it.country} · ${it.days} days · $${(it.budget * people).toLocaleString()}</div></div>
+          <div class="bcMeta">${it.country} ·
+            <input type="number" class="bcDaysInput" data-idx="${it._idx}" value="${it.days}" min="1" max="60"/> days ·
+            $${(it.budget * people).toLocaleString()}</div></div>
           <button class="bcRemove" data-idx="${it._idx}">✕</button></div>`).join('')}
       </div>`;
     }).join('');
     yearsCol.querySelectorAll('.bcRemove').forEach((b) => (b.onclick = () => remove(+b.dataset.idx)));
+    yearsCol.querySelectorAll('.bcDaysInput').forEach((inp) => {
+      inp.onclick = (e) => e.stopPropagation();
+      inp.onchange = () => setDays(+inp.dataset.idx, inp.value);
+    });
 
     const grand = bucket.reduce((s, i) => s + i.budget, 0) * people;
     const totalDays = bucket.reduce((s, i) => s + i.days, 0);
@@ -62,3 +80,4 @@ export function initBucketDrawer() {
   render();
   return { add, yearsFor };
 }
+

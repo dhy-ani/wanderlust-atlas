@@ -1,6 +1,6 @@
 // App entry point: wires the globe, panels, and backend together.
 import './styles/main.css';
-import { DESTINATIONS, byId, addRuntimeDestination, removeRuntimeDestination } from './data/destinations.js';
+import { DESTINATIONS, byId, addRuntimeDestination, removeRuntimeDestination, getHiddenBuiltins, hideBuiltinDestination } from './data/destinations.js';
 import { api } from './api.js';
 import { initGlobe } from './globe/globe.js';
 import { initDetailPanel } from './panels/detailPanel.js';
@@ -8,6 +8,14 @@ import { initMapPanel } from './panels/mapPanel.js';
 import { initRoutePlanner } from './panels/routePlanner.js';
 import { initBucketDrawer } from './panels/bucketDrawer.js';
 import { initAddDestination } from './panels/addDestination.js';
+
+// Drop any built-ins the user previously hid, before anything renders.
+const hiddenIds = new Set(getHiddenBuiltins());
+if (hiddenIds.size) {
+  for (let i = DESTINATIONS.length - 1; i >= 0; i--) {
+    if (hiddenIds.has(DESTINATIONS[i].id)) DESTINATIONS.splice(i, 1);
+  }
+}
 
 // ---- globe ----
 const globe = initGlobe(document.getElementById('globeCanvas'), {
@@ -26,7 +34,7 @@ const map = initMapPanel({
 });
 
 const detail = initDetailPanel({
-  onAddBucket: (dest, year, budget) => bucket.add(dest, year, budget),
+  onAddBucket: (dest, year, budget, days) => bucket.add(dest, year, budget, days),
   onAddRoute: (dest) => route.addStop({ id: dest.id, name: dest.name, lat: dest.lat, lng: dest.lng }),
   onOpenMap: (dest) => map.open(dest),
   onSearchNearby: (dest) => map.open(dest, { nearby: true }),
@@ -76,8 +84,13 @@ async function addDestinationFromPlace(place) {
 }
 
 async function removeDestination(dest) {
-  try { await api.deleteDestination(dest.id); } catch (e) { /* still remove locally */ }
-  removeRuntimeDestination(dest.id);
+  if (dest.custom) {
+    try { await api.deleteDestination(dest.id); } catch (e) { /* still remove locally */ }
+    removeRuntimeDestination(dest.id);
+  } else {
+    // Built-ins are shared data — hide it from this browser only, persisted locally.
+    hideBuiltinDestination(dest.id);
+  }
   globe.removePin(dest.id);
   document.querySelector(`.navItem[data-id="${dest.id}"]`)?.remove();
 }

@@ -184,3 +184,16 @@ export function removeRuntimeDestination(id) {
   const i = DESTINATIONS.findIndex((x) => x.id === id);
   if (i >= 0) DESTINATIONS.splice(i, 1);
 }
+
+// Built-in destinations can't be deleted server-side (they're shared data), but a
+// user can hide one from their own view. Hidden ids persist in localStorage so the
+// hide survives a reload.
+const HIDDEN_KEY = 'wa_hidden_builtins';
+export function getHiddenBuiltins() {
+  try { return JSON.parse(localStorage.getItem(HIDDEN_KEY)) || []; } catch { return []; }
+}
+export function hideBuiltinDestination(id) {
+  const hidden = getHiddenBuiltins();
+  if (!hidden.includes(id)) { hidden.push(id); localStorage.setItem(HIDDEN_KEY, JSON.stringify(hidden)); }
+  removeRuntimeDestination(id);
+}
