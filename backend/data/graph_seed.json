@@ -1,0 +1,17 @@
+{
+  "chongqing": {"categories": ["urban", "food", "nightlife"], "safety": "High", "season": "spring"},
+  "hawaii": {"categories": ["nature", "adventure", "relaxed"], "safety": "High", "season": "spring"},
+  "italy": {"categories": ["history", "museums", "food", "romance"], "safety": "High", "season": "spring"},
+  "paris": {"categories": ["museums", "romance", "history", "food"], "safety": "High", "season": "spring"},
+  "switzerland": {"categories": ["nature", "relaxed", "food"], "safety": "High", "season": "summer"},
+  "rio": {"categories": ["beaches", "nightlife", "nature"], "safety": "Medium", "season": "winter"},
+  "georgia": {"categories": ["food", "nature", "history"], "safety": "High", "season": "spring"},
+  "dubai": {"categories": ["urban", "nightlife", "shopping"], "safety": "High", "season": "winter"},
+  "tokyo": {"categories": ["urban", "food", "technology", "museums"], "safety": "High", "season": "spring"},
+  "fuji": {"categories": ["nature", "hiking", "adventure"], "safety": "High", "season": "summer"},
+  "jaipur": {"categories": ["history", "museums", "shopping"], "safety": "Medium", "season": "winter"},
+  "ooty": {"categories": ["nature", "relaxed", "hiking"], "safety": "High", "season": "winter"},
+  "himalayas": {"categories": ["hiking", "adventure", "nature"], "safety": "Medium", "season": "spring"},
+  "ranthambore": {"categories": ["nature", "adventure", "wildlife"], "safety": "Medium", "season": "winter"},
+  "sanfrancisco": {"categories": ["urban", "food", "history", "nature"], "safety": "High", "season": "fall"}
+}

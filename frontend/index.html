@@ -31,6 +31,7 @@
     <button id="addDestToggle">＋ Add Destination</button>
     <button id="routeToggle">🧭 Route Planner <span class="badge" id="routeBadge">0</span></button>
     <button id="bucketToggle">✦ Bucket List <span class="badge" id="bucketBadge">0</span></button>
+    <button id="negotiationToggle">🤝 Group Plan</button>
   </div>
 
   <!-- Detail panel (right) -->
@@ -79,6 +80,17 @@
         <button id="addSearchBtn">Search</button>
       </div>
       <div id="addResults" class="placeResults"></div>
+    </div>
+  </div>
+
+  <!-- Group negotiation modal -->
+  <div id="negotiationModal">
+    <div class="negoBox">
+      <div class="negoHead">
+        <h3>🤝 Group Trip Plan</h3>
+        <button class="closeBtn dark" id="closeNegotiation">✕</button>
+      </div>
+      <div id="negotiationBody" class="negoBody"></div>
     </div>
   </div>
 

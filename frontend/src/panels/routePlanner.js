@@ -66,5 +66,5 @@ export function initRoutePlanner({ globe }) {
   }
 
   recompute();
-  return { addStop };
+  return { addStop, getStops: () => stops.slice() };
 }

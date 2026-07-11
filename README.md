@@ -69,15 +69,39 @@ wanderlust-atlas/
 │   └── app/
 │       ├── routers/    HTTP endpoints (one file per feature)
 │       ├── services/   Third-party API clients + mock fallback
-│       ├── ml/         Trainable price + best-time models
+│       ├── ml/          Trainable price + best-time models
+│       ├── agents/      Multi-agent group planner (this branch) — twins,
+│       │                mediator, GraphRAG, memory, cost-controlled LLM client
 │       └── models/     Pydantic request/response schemas
 ├── frontend/     Vite + Three.js single-page app
 │   └── src/
 │       ├── globe/      3D satellite globe, pins, dashed routes
-│       ├── panels/     Detail / map / flights / route / bucket UI
-│       └── search/     Nearby + manual place search
-└── docs/         Architecture, setup (API keys), and ML explainer
+│       └── panels/     Detail / map / route / bucket / negotiation UI
+└── docs/         Architecture, setup (API keys), ML explainer, Docker guide,
+                  architecture-v2/ (this branch's multi-agent design)
 ```
 
 Read [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for how data flows through the app,
 and [`docs/ML.md`](docs/ML.md) for how the price models work.
+
+## 🤝 Group trip planning (this branch: `agent-integration`)
+
+A multi-agent system for planning a trip as a group: an admin creates a group with a
+join code, each member gets a **Digital Twin** built from a short preference survey,
+and a **Mediator** proposes an itinerary that the twins negotiate over — if the
+blended score is below 80 (or 2+ people dislike it), the mediator reconfigures using
+GraphRAG-sourced alternatives and tries again, up to 5 rounds.
+
+- **Read first:** [`docs/architecture-v2/SYSTEM_ARCHITECTURE.md`](docs/architecture-v2/SYSTEM_ARCHITECTURE.md)
+  (diagram + the cost-control design) and
+  [`docs/architecture-v2/IMPLEMENTATION_CHECKLIST.md`](docs/architecture-v2/IMPLEMENTATION_CHECKLIST.md)
+  (exactly what's built vs. still open).
+- **Runs at $0** with no keys — the entire negotiation loop, scoring, and
+  GraphRAG/memory queries work on a free rule-based path, tested in
+  `backend/tests/test_agents.py`.
+- **Add `OPENROUTER_API_KEY`** to upgrade ambiguous scoring + chat-log prose to a real
+  LLM (defaults to the cheap `google/gemini-2.5-flash-lite`, one batched call per round
+  — see the cost-control section of the architecture doc).
+- **Add Neo4j + ChromaDB** for real GraphRAG/vector memory:
+  `docker compose -f docker-compose.yml -f docker-compose.agents.yml up --build`.
+- Try it in the app: **🤝 Group Plan** button in the bottom toolbar.

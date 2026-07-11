@@ -8,6 +8,8 @@ import { initMapPanel } from './panels/mapPanel.js';
 import { initRoutePlanner } from './panels/routePlanner.js';
 import { initBucketDrawer } from './panels/bucketDrawer.js';
 import { initAddDestination } from './panels/addDestination.js';
+import { initNegotiationPanel } from './panels/negotiationPanel.js';
+import { ensureCurrentUser } from './identity.js';
 
 // Drop any built-ins the user previously hid, before anything renders.
 const hiddenIds = new Set(getHiddenBuiltins());
@@ -34,7 +36,7 @@ const map = initMapPanel({
 });
 
 const detail = initDetailPanel({
-  onAddBucket: (dest, year, budget, days) => bucket.add(dest, year, budget, days),
+  onAddBucket: (dest, year, budget, days, addedBy) => bucket.add(dest, year, budget, days, addedBy),
   onAddRoute: (dest) => route.addStop({ id: dest.id, name: dest.name, lat: dest.lat, lng: dest.lng }),
   onOpenMap: (dest) => map.open(dest),
   onSearchNearby: (dest) => map.open(dest, { nearby: true }),
@@ -43,6 +45,7 @@ const detail = initDetailPanel({
 });
 
 initAddDestination({ onAdd: (place) => addDestinationFromPlace(place) });
+initNegotiationPanel({ getBucketDestinations: () => bucket.listDestinations() });
 
 // ---- nav list ----
 const navList = document.getElementById('navListItems');
@@ -67,11 +70,13 @@ function selectDestination(id) {
 
 // ---- add / remove custom destinations ----
 async function addDestinationFromPlace(place) {
+  const addedBy = ensureCurrentUser();
   const payload = {
     name: place.name,
     country: place.country || (place.address ? place.address.split(',').slice(-1)[0].trim() : 'Custom pin'),
     lat: place.lat,
     lng: place.lng,
+    added_by: addedBy,
   };
   const dest = await api.addDestination(payload); // backend fills id, nearest airport, defaults
   addRuntimeDestination(dest);
@@ -79,6 +84,12 @@ async function addDestinationFromPlace(place) {
   globe.removePin('place:' + place.name); // clear any transient search pin for the same spot
   globe.addDestination(dest);
   document.getElementById('addDestModal').classList.remove('open');
+
+  // Adding a destination IS planning to go there — it becomes a bucket-list entry
+  // right away (default: next year), attributed to whoever added it.
+  const nextYear = new Date().getFullYear() + 1;
+  bucket.add(dest, nextYear, dest.budgetLow * dest.days, dest.days, addedBy);
+
   selectDestination(dest.id);
   return dest;
 }

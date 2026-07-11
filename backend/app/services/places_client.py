@@ -6,11 +6,27 @@ the frontend's "search other nearby famous places / type it in manually" feature
 """
 from __future__ import annotations
 
+import re
+
 import httpx
 
 from app.config import get_settings
 from app.models.schemas import Place, PlacesResponse
 from app.services.mock_data import mock_places
+
+# Nominatim's `display_name`/Google's `name` sometimes append the local-script
+# name after the English one (e.g. "Marrakech ⵎⵕⵕⴰⴽⵯⵛ مراكش"). Requesting
+# English explicitly (below) fixes most of this at the source; this regex is the
+# safety net for whatever slips through — keep only the leading Latin-script run.
+_LATIN_PREFIX = re.compile(r"^[A-Za-z0-9À-ÖØ-öø-ÿ0-9 '’\-,.()&/]+")
+
+
+def _english_only(name: str) -> str:
+    if not name:
+        return name
+    m = _LATIN_PREFIX.match(name)
+    cleaned = (m.group(0).strip() if m else name).rstrip(" -,")
+    return cleaned or name  # never return an empty string
 
 
 async def _google_nearby(lat: float, lng: float, query: str, radius_m: int) -> list[Place]:
@@ -19,13 +35,13 @@ async def _google_nearby(lat: float, lng: float, query: str, radius_m: int) -> l
         if query:
             r = await client.get(
                 "https://maps.googleapis.com/maps/api/place/textsearch/json",
-                params={"query": query, "location": f"{lat},{lng}",
+                params={"query": query, "location": f"{lat},{lng}", "language": "en",
                         "radius": radius_m, "key": s.google_places_api_key},
             )
         else:
             r = await client.get(
                 "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
-                params={"location": f"{lat},{lng}", "radius": radius_m,
+                params={"location": f"{lat},{lng}", "radius": radius_m, "language": "en",
                         "type": "tourist_attraction", "key": s.google_places_api_key},
             )
         r.raise_for_status()
@@ -34,7 +50,7 @@ async def _google_nearby(lat: float, lng: float, query: str, radius_m: int) -> l
         for p in results:
             loc = p["geometry"]["location"]
             out.append(Place(
-                name=p.get("name", "Unknown"), lat=loc["lat"], lng=loc["lng"],
+                name=_english_only(p.get("name", "Unknown")), lat=loc["lat"], lng=loc["lng"],
                 category=(p.get("types") or ["poi"])[0], address=p.get("formatted_address"),
                 rating=p.get("rating"), source="google",
             ))
@@ -48,13 +64,14 @@ async def _nominatim(query: str, lat: float, lng: float) -> list[Place]:
         r = await client.get(
             "https://nominatim.openstreetmap.org/search",
             params={"q": query or "tourist attraction", "format": "jsonv2", "limit": 10,
+                    "accept-language": "en",
                     "viewbox": f"{lng-box},{lat+box},{lng+box},{lat-box}", "bounded": 1},
         )
         r.raise_for_status()
         out = []
         for p in r.json():
             out.append(Place(
-                name=p.get("display_name", "").split(",")[0], lat=float(p["lat"]),
+                name=_english_only(p.get("display_name", "").split(",")[0]), lat=float(p["lat"]),
                 lng=float(p["lon"]), category=p.get("type"),
                 address=p.get("display_name"), source="nominatim",
             ))
@@ -70,13 +87,13 @@ async def geocode(query: str) -> PlacesResponse:
             async with httpx.AsyncClient(timeout=15) as client:
                 r = await client.get(
                     "https://maps.googleapis.com/maps/api/place/textsearch/json",
-                    params={"query": query, "key": s.google_places_api_key},
+                    params={"query": query, "language": "en", "key": s.google_places_api_key},
                 )
                 r.raise_for_status()
                 out = []
                 for p in r.json().get("results", [])[:8]:
                     loc = p["geometry"]["location"]
-                    out.append(Place(name=p.get("name", "?"), lat=loc["lat"], lng=loc["lng"],
+                    out.append(Place(name=_english_only(p.get("name", "?")), lat=loc["lat"], lng=loc["lng"],
                                      address=p.get("formatted_address"),
                                      country=(p.get("formatted_address", "").split(",")[-1].strip() or None),
                                      rating=p.get("rating"), source="google"))
@@ -88,14 +105,14 @@ async def geocode(query: str) -> PlacesResponse:
         async with httpx.AsyncClient(timeout=15, headers={"User-Agent": "wanderlust-atlas/1.0"}) as client:
             r = await client.get(
                 "https://nominatim.openstreetmap.org/search",
-                params={"q": query, "format": "jsonv2", "limit": 8, "addressdetails": 1},
+                params={"q": query, "format": "jsonv2", "limit": 8, "addressdetails": 1, "accept-language": "en"},
             )
             r.raise_for_status()
             out = []
             for p in r.json():
                 addr = p.get("address", {})
                 out.append(Place(
-                    name=p.get("display_name", "").split(",")[0], lat=float(p["lat"]), lng=float(p["lon"]),
+                    name=_english_only(p.get("display_name", "").split(",")[0]), lat=float(p["lat"]), lng=float(p["lon"]),
                     category=p.get("type"), address=p.get("display_name"),
                     country=addr.get("country"), source="nominatim"))
             if out:

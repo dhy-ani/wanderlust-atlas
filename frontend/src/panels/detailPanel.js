@@ -1,6 +1,7 @@
 // Right-hand detail panel: destination content + on-demand live flights, ML price
 // prediction, and best-time-to-travel, plus action buttons (bucket, route, map).
 import { api } from '../api.js';
+import { ensureCurrentUser } from '../identity.js';
 import { renderFlights, renderPrediction, renderBestTime } from './flightPanel.js';
 
 const YEARS = [2026, 2027, 2028, 2029, 2030, 2031, 2032];
@@ -31,7 +32,7 @@ export function initDetailPanel({ onAddBucket, onAddRoute, onOpenMap, onSearchNe
            Use <b>🔍 Nearby places</b> to explore what's around it.</div>`;
 
     scroll.innerHTML = `
-      <div class="eyebrow">${dest.country} · ✈ ${dest.airport}${dest.custom ? ' · custom' : ''}</div>
+      <div class="eyebrow">${dest.country} · ✈ ${dest.airport}${dest.custom ? ' · custom' : ''}${dest.added_by ? ` · added by ${dest.added_by}` : ''}</div>
       <h2>${dest.name}</h2>
       ${dest.tagline ? `<div class="tagline">${dest.tagline}</div>` : ''}
 
@@ -89,7 +90,7 @@ export function initDetailPanel({ onAddBucket, onAddRoute, onOpenMap, onSearchNe
       const year = parseInt(document.getElementById('yearSelect').value, 10);
       const days = Math.max(1, parseInt(daysInput.value, 10) || dest.days);
       const budget = parseFloat(budgetInput.value) || 0;
-      onAddBucket(dest, year, budget, days);
+      onAddBucket(dest, year, budget, days, ensureCurrentUser());
       const b = document.getElementById('addBucketBtn');
       b.textContent = '✓ Added!'; b.classList.add('added');
       setTimeout(() => open(dest), 700);

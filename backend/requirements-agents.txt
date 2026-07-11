@@ -1,0 +1,8 @@
+# Extra dependencies for the multi-agent system (agent-integration branch only).
+# Install with:  pip install -r requirements.txt -r requirements-agents.txt
+# Everything in app/agents/ works WITHOUT these installed (falls back to the
+# rule-based scorer + static graph + keyword memory) — install them to upgrade to
+# real LangGraph orchestration, Neo4j GraphRAG, and ChromaDB vector memory.
+langgraph==0.2.60
+neo4j==5.27.0
+chromadb==0.5.23

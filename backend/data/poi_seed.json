@@ -1,0 +1,97 @@
+{
+  "chongqing": [
+    {"name": "Hongyadong", "category": "urban", "est_cost": 0},
+    {"name": "Ciqikou Ancient Town", "category": "history", "est_cost": 10},
+    {"name": "Yangtze River Cableway", "category": "adventure", "est_cost": 15},
+    {"name": "Eling Park", "category": "relaxed", "est_cost": 5}
+  ],
+  "hawaii": [
+    {"name": "Mauna Kea Summit", "category": "nature", "est_cost": 20},
+    {"name": "Waipio Valley Lookout", "category": "nature", "est_cost": 0},
+    {"name": "Kilauea / Volcanoes NP", "category": "adventure", "est_cost": 30},
+    {"name": "Akaka Falls", "category": "nature", "est_cost": 10}
+  ],
+  "italy": [
+    {"name": "Colosseum & Roman Forum", "category": "history", "est_cost": 25},
+    {"name": "Vatican & Sistine Chapel", "category": "museums", "est_cost": 30},
+    {"name": "Trevi Fountain", "category": "romance", "est_cost": 0},
+    {"name": "Uffizi & the Duomo", "category": "museums", "est_cost": 25},
+    {"name": "Venice & Amalfi Coast", "category": "romance", "est_cost": 60}
+  ],
+  "paris": [
+    {"name": "Eiffel Tower", "category": "romance", "est_cost": 30},
+    {"name": "The Louvre", "category": "museums", "est_cost": 20},
+    {"name": "Notre-Dame & Ile de la Cite", "category": "history", "est_cost": 0},
+    {"name": "Montmartre & Sacre-Coeur", "category": "romance", "est_cost": 0},
+    {"name": "Palace of Versailles", "category": "history", "est_cost": 35}
+  ],
+  "switzerland": [
+    {"name": "Lindt Home of Chocolate", "category": "food", "est_cost": 20},
+    {"name": "Lake Zurich Promenade", "category": "relaxed", "est_cost": 0},
+    {"name": "Jungfraujoch Top of Europe", "category": "nature", "est_cost": 90},
+    {"name": "Rhine Falls", "category": "nature", "est_cost": 10}
+  ],
+  "rio": [
+    {"name": "Christ the Redeemer", "category": "history", "est_cost": 25},
+    {"name": "Sugarloaf Mountain", "category": "nature", "est_cost": 30},
+    {"name": "Copacabana & Ipanema", "category": "beaches", "est_cost": 0},
+    {"name": "Tijuca Forest", "category": "nature", "est_cost": 15},
+    {"name": "Selaron Steps", "category": "urban", "est_cost": 0}
+  ],
+  "georgia": [
+    {"name": "Narikala Fortress & Old Tbilisi", "category": "history", "est_cost": 5},
+    {"name": "Gergeti Trinity Church", "category": "nature", "est_cost": 10},
+    {"name": "Abanotubani Sulfur Baths", "category": "relaxed", "est_cost": 15},
+    {"name": "Kakheti Wine Region", "category": "food", "est_cost": 40}
+  ],
+  "dubai": [
+    {"name": "Burj Khalifa", "category": "urban", "est_cost": 40},
+    {"name": "Desert Safari", "category": "adventure", "est_cost": 60},
+    {"name": "Palm Jumeirah & Atlantis", "category": "beaches", "est_cost": 50},
+    {"name": "Dubai Mall & Fountain", "category": "shopping", "est_cost": 0}
+  ],
+  "tokyo": [
+    {"name": "Shibuya Crossing & Sky", "category": "urban", "est_cost": 10},
+    {"name": "Senso-ji Temple", "category": "history", "est_cost": 0},
+    {"name": "Meiji Shrine", "category": "relaxed", "est_cost": 0},
+    {"name": "Tsukiji Outer Market", "category": "food", "est_cost": 15},
+    {"name": "teamLab", "category": "technology", "est_cost": 30}
+  ],
+  "fuji": [
+    {"name": "Chureito Pagoda", "category": "nature", "est_cost": 0},
+    {"name": "Lake Kawaguchiko", "category": "nature", "est_cost": 5},
+    {"name": "Fuji Summit Trail", "category": "hiking", "est_cost": 0},
+    {"name": "Hakone Ropeway & Onsen", "category": "relaxed", "est_cost": 25}
+  ],
+  "jaipur": [
+    {"name": "Amber Fort", "category": "history", "est_cost": 10},
+    {"name": "Hawa Mahal", "category": "history", "est_cost": 5},
+    {"name": "City Palace", "category": "museums", "est_cost": 10},
+    {"name": "Jantar Mantar", "category": "museums", "est_cost": 5},
+    {"name": "Nahargarh Fort", "category": "history", "est_cost": 5}
+  ],
+  "ooty": [
+    {"name": "Nilgiri Mountain Railway", "category": "nature", "est_cost": 10},
+    {"name": "Ooty Botanical Garden", "category": "relaxed", "est_cost": 2},
+    {"name": "Doddabetta Peak", "category": "hiking", "est_cost": 2},
+    {"name": "Ooty Lake", "category": "relaxed", "est_cost": 5}
+  ],
+  "himalayas": [
+    {"name": "Everest Base Camp Trek", "category": "hiking", "est_cost": 100},
+    {"name": "Tengboche Monastery", "category": "history", "est_cost": 0},
+    {"name": "Kala Patthar", "category": "hiking", "est_cost": 0},
+    {"name": "Namche Bazaar", "category": "shopping", "est_cost": 10}
+  ],
+  "ranthambore": [
+    {"name": "Ranthambore National Park", "category": "wildlife", "est_cost": 40},
+    {"name": "Ranthambore Fort", "category": "history", "est_cost": 5},
+    {"name": "Padam Talao & Jogi Mahal", "category": "nature", "est_cost": 0},
+    {"name": "Surwal Lake", "category": "wildlife", "est_cost": 10}
+  ],
+  "sanfrancisco": [
+    {"name": "Golden Gate Bridge", "category": "urban", "est_cost": 0},
+    {"name": "Alcatraz Island", "category": "history", "est_cost": 45},
+    {"name": "Fisherman's Wharf & Pier 39", "category": "food", "est_cost": 15},
+    {"name": "Cable Cars & Lombard Street", "category": "urban", "est_cost": 8}
+  ]
+}

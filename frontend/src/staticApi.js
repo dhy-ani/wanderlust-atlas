@@ -11,6 +11,7 @@
 //  Mirrors: backend/app/ml/price_model.py, services/mock_data.py, ml/best_time.py
 // ============================================================================
 import { DESTINATIONS } from './data/destinations.js';
+import { englishOnly } from './logic/text.js';
 
 const NYC_ORIGINS = { JFK: [40.6413, -73.7781], EWR: [40.6895, -74.1745] };
 const SEASON = { 1: 1.02, 2: 0.92, 3: 0.95, 4: 1.0, 5: 1.06, 6: 1.18, 7: 1.28, 8: 1.24, 9: 1.0, 10: 0.96, 11: 0.98, 12: 1.22 };
@@ -198,19 +199,19 @@ export const staticApi = {
   // Place search hits OpenStreetMap Nominatim directly (public, CORS-enabled).
   places: async (lat, lng, q = '', radius_m = 40000) => {
     const box = 1.2;
-    const params = new URLSearchParams({ q: q || 'tourist attraction', format: 'jsonv2', limit: '10',
+    const params = new URLSearchParams({ q: q || 'tourist attraction', format: 'jsonv2', limit: '10', 'accept-language': 'en',
       viewbox: `${lng - box},${lat + box},${lng + box},${lat - box}`, bounded: '1' });
     const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
     const data = await res.json();
-    const results = data.map((p) => ({ name: (p.display_name || '').split(',')[0], lat: +p.lat, lng: +p.lon, category: p.type, address: p.display_name, source: 'nominatim' }));
+    const results = data.map((p) => ({ name: englishOnly((p.display_name || '').split(',')[0]), lat: +p.lat, lng: +p.lon, category: p.type, address: p.display_name, source: 'nominatim' }));
     return { query: q, results, source: 'nominatim' };
   },
 
   geocode: async (q) => {
-    const params = new URLSearchParams({ q, format: 'jsonv2', limit: '8', addressdetails: '1' });
+    const params = new URLSearchParams({ q, format: 'jsonv2', limit: '8', addressdetails: '1', 'accept-language': 'en' });
     const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
     const data = await res.json();
-    const results = data.map((p) => ({ name: (p.display_name || '').split(',')[0], lat: +p.lat, lng: +p.lon,
+    const results = data.map((p) => ({ name: englishOnly((p.display_name || '').split(',')[0]), lat: +p.lat, lng: +p.lon,
       category: p.type, address: p.display_name, country: p.address?.country, source: 'nominatim' }));
     return { query: q, results, source: 'nominatim' };
   },

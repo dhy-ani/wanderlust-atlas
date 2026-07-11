@@ -1,0 +1,23 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/agents/__init__.py"]
+
+[tool.coverage.report]
+# CI fails the job below this — see deploy/ci-pipeline-workflow.yml "backend-tests".
+fail_under = 80
+show_missing = true
+
+# ----------------------------------------------------------------------------
+# Mutation testing (mutmut). Linux-only (no native Windows support) — run in CI
+# or inside a Linux container; see docs/architecture-v2/TESTING.md for how this
+# was tuned. Deliberately scoped to reasoner.py rather than the whole `app/`:
+# it's the highest-value pure-logic module (scoring math with no I/O), and
+# mutating routers/service clients mostly just re-tests mocking, not logic.
+# Currently measured at 86.8% (92/106 killed) — see check_mutation_score.py.
+[tool.mutmut]
+source_paths = ["app"]
+only_mutate = ["app/agents/reasoner.py"]
+also_copy = ["data/"]

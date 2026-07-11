@@ -28,6 +28,7 @@ class NewDestination(BaseModel):
     budgetLow: int = 80
     budgetHigh: int = 150
     bestTime: str = "Year-round"
+    added_by: str = "Guest"           # who added it — shown in the UI and bucket list
 
 
 def _slugify(name: str) -> str:

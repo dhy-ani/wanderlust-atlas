@@ -9,10 +9,19 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # repo-root/.env  (this file is backend/app/config.py -> parents[2] == repo root)
 ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
+
+# pydantic-settings (below) loads .env into the Settings object only — it does NOT
+# populate os.environ. But app/agents/*.py (llm_client, graphrag, memory) read
+# os.environ directly, so without this, OPENROUTER_API_KEY etc. in .env would be
+# silently ignored outside Docker (where compose passes real env vars instead).
+# override=False: real shell/OS env vars still win over .env, same precedence as
+# Settings' own env_file behaviour.
+load_dotenv(ENV_PATH, override=False)
 
 
 class Settings(BaseSettings):

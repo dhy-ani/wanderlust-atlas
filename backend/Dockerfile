@@ -15,9 +15,22 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 
 # 1) Dependencies first. This layer is cached and only rebuilds when
-#    requirements.txt changes — not on every code edit.
+#    requirements*.txt changes — not on every code edit.
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Optional: the multi-agent extras (langgraph, neo4j, chromadb). Off by default so
+# the base app image stays small; docker-compose.agents.yml turns this on.
+# On Linux, chroma-hnswlib installs from a prebuilt wheel (unlike on Windows, where
+# it needs MSVC build tools) — but build-essential is installed as a safety net in
+# case a matching wheel isn't published for this exact Python/arch combination.
+ARG INSTALL_AGENT_EXTRAS=""
+COPY requirements-agents.txt .
+RUN if [ "$INSTALL_AGENT_EXTRAS" = "1" ]; then \
+        apt-get update && apt-get install -y --no-install-recommends build-essential \
+        && rm -rf /var/lib/apt/lists/* \
+        && pip install --no-cache-dir -r requirements-agents.txt; \
+    fi
 
 # 2) Application code + data.
 COPY app ./app

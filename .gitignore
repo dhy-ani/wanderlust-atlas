@@ -11,12 +11,22 @@ venv/
 *.egg-info/
 .pytest_cache/
 .mypy_cache/
+.coverage
+backend/mutants/
 
 # --- trained ML artifacts (regenerate with `python -m app.ml.train`) ---
 backend/data/models/*.joblib
 
 # --- user-added custom destinations (runtime state) ---
 backend/data/custom_destinations.json
+
+# --- agent system runtime state (groups, identities, memory, LLM cache) ---
+backend/data/groups.json
+backend/data/identities.json
+backend/data/end_surveys.json
+backend/data/memory_fallback.json
+backend/data/llm_cache.sqlite3
+backend/data/chroma/
 
 # --- node / vite ---
 node_modules/
