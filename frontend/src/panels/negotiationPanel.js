@@ -2,8 +2,12 @@
 // trip, and watch the agent chat log (rule-based reasoning shown as "via: rule",
 // LLM-backed turns shown as "via: llm") round-by-round until the group converges
 // or the round cap is hit. Talks directly to the /api/group, /api/survey, and
-// /api/negotiate endpoints added by the agent-integration branch.
+// /api/negotiate endpoints — these need the real Python backend (FastAPI +
+// LangGraph + GraphRAG), which GitHub Pages can't run. In static-mode builds
+// (VITE_STATIC=1) this panel shows an explainer instead of firing requests
+// that would just 404.
 import { API_BASE } from '../config.js';
+import { USE_STATIC } from '../api.js';
 
 async function post(path, body) {
   const res = await fetch(`${API_BASE}/api${path}`, {
@@ -28,8 +32,27 @@ export function initNegotiationPanel({ getBucketDestinations }) {
   let members = [];               // local-only list of {name, submitted}
 
   function render() {
+    if (USE_STATIC) return renderStaticNotice();
     if (!group) return renderCreateJoin();
     return renderGroup();
+  }
+
+  function renderStaticNotice() {
+    body.innerHTML = `
+      <div class="negoIntro">Group trip planning runs a real multi-agent backend
+        (FastAPI + LangGraph + GraphRAG) to negotiate a route between each
+        member's Digital Twin — that needs a live Python server, which this
+        static demo (GitHub Pages) doesn't run.</div>
+      <div class="negoCard">
+        <h4>Run it locally to try this feature</h4>
+        <div class="hintSmall">
+          <code>docker compose up --build</code> — then open
+          <b>http://localhost:8080</b> and click <b>🤝 Group Plan</b> again.<br/><br/>
+          Or see <code>docs/architecture-v2/SYSTEM_ARCHITECTURE.md</code> in the
+          repo for the full design (cost-controlled LLM calls, GraphRAG-driven
+          reconfiguration, Reddit trending signal, hard spend guardrails).
+        </div>
+      </div>`;
   }
 
   function renderCreateJoin() {

@@ -6,7 +6,7 @@ import { staticApi } from './staticApi.js';
 
 // On GitHub Pages there is no backend, so builds with VITE_STATIC=1 use a
 // client-side implementation (staticApi) with the identical interface.
-const USE_STATIC = import.meta.env.VITE_STATIC === '1' || import.meta.env.VITE_STATIC === 'true';
+export const USE_STATIC = import.meta.env.VITE_STATIC === '1' || import.meta.env.VITE_STATIC === 'true';
 
 async function get(path, params = {}) {
   const qs = new URLSearchParams(params).toString();

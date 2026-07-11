@@ -114,15 +114,3 @@ api.destinations().then((list) => {
     globe.addDestination(d);
   });
 }).catch(() => {});
-
-// ---- live-integration status badge in the header ----
-api.health().then((h) => {
-  const bits = [
-    h.live.flights_amadeus ? 'flights✓' : 'flights·demo',
-    h.live.weather_openweather ? 'weather✓' : 'weather·model',
-    h.live.places_google ? 'places✓' : 'places·osm',
-  ];
-  document.getElementById('liveStatus').textContent = bits.join('  ·  ');
-}).catch(() => {
-  document.getElementById('liveStatus').textContent = 'backend offline — start it on :8000';
-});
