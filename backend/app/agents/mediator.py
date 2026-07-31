@@ -102,12 +102,30 @@ def build_initial_proposal(destination_id: str, twins: list[DigitalTwin], top_n:
         scored.append((like_score + trending.get(poi["name"], 0.0), poi))
     scored.sort(key=lambda x: -x[0])
 
-    chosen = [p for _, p in scored[:top_n]]
+    # Budget guardrail: the group's most budget-constrained twin sets the
+    # ceiling — reasoner.rule_score hard-rejects (score=15) ANY proposal over
+    # ANY twin's budget_max, so proposing past that isn't "ambitious," it's a
+    # proposal that's mathematically guaranteed to fail round 1. Greedily add
+    # top-ranked POIs while staying under the ceiling, instead of blindly
+    # taking the top `top_n` regardless of cost.
+    budget_ceiling = min((t.identity.budget_max for t in twins), default=float("inf"))
+    chosen, running_cost = [], 0.0
+    for _, poi in scored:
+        if len(chosen) >= top_n:
+            break
+        cost = poi.get("est_cost", 0)
+        if running_cost + cost > budget_ceiling:
+            continue  # skip this one, keep looking for a cheaper fit lower in the ranking
+        chosen.append(poi)
+        running_cost += cost
+
     items = [ProposalItem(destination_id=_slug(p["name"]), name=p["name"],
                           category=p.get("category", "general"), est_cost=p.get("est_cost", 0)) for p in chosen]
+    note = "initial proposal: top POIs by group likes + Reddit trending signal, within budget"
+    if len(chosen) < min(top_n, len(pois)):
+        note += f" (fewer items than usual — ${budget_ceiling:.0f} budget ceiling limited selection)"
     return Proposal(
-        destination_id=destination_id, items=items, total_cost=sum(i.est_cost for i in items),
-        note="initial proposal: top POIs by group likes + Reddit trending signal",
+        destination_id=destination_id, items=items, total_cost=round(running_cost, 2), note=note,
     )
 
 

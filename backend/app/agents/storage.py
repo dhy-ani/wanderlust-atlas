@@ -1,23 +1,19 @@
-"""Persistence for groups, identity vectors, and end-of-trip surveys. Same JSON-file
-pattern as services/destinations.py's custom-destination registry — simple, human
--readable, and volume-mountable in Docker. Swap for a real DB if usage grows."""
+"""Persistence for end-of-trip surveys — JSON-file, same pattern as
+services/destinations.py's custom-destination registry. Groups/identities/
+wishlist used to live here too but are now real DB tables (app/db/models.py),
+since "sign in" needs real accounts, not a name typed into a box — see
+routers/group.py, routers/survey.py, routers/wishlist.py.
+"""
 from __future__ import annotations
 
 import json
-import secrets
-import string
-import uuid
 from pathlib import Path
 
-from app.models.agent_schemas import Group, GroupCreate, IdentityVector, SurveyEndIn, SurveyStartIn
+from app.models.agent_schemas import SurveyEndIn
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
-GROUPS_PATH = DATA_DIR / "groups.json"
-IDENTITIES_PATH = DATA_DIR / "identities.json"
 END_SURVEYS_PATH = DATA_DIR / "end_surveys.json"
 
-_groups: dict[str, dict] = {}
-_identities: dict[str, dict] = {}   # key: f"{group_id}:{member_name}"
 _end_surveys: list[dict] = []
 
 
@@ -33,84 +29,13 @@ def _save(path: Path, data) -> None:
 
 
 def _init():
-    global _groups, _identities, _end_surveys
-    _groups = _load(GROUPS_PATH, {})
-    _identities = _load(IDENTITIES_PATH, {})
+    global _end_surveys
     _end_surveys = _load(END_SURVEYS_PATH, [])
 
 
 _init()
 
 
-def _gen_code(length: int = 6) -> str:
-    alphabet = string.ascii_uppercase + string.digits
-    return "".join(secrets.choice(alphabet) for _ in range(length))
-
-
-# ---- groups ----
-def create_group(payload: GroupCreate) -> Group:
-    group = Group(
-        id=str(uuid.uuid4())[:8], name=payload.name, code=payload.code or _gen_code(),
-        admin_name=payload.admin_name, member_names=[payload.admin_name],
-    )
-    _groups[group.id] = group.model_dump()
-    _save(GROUPS_PATH, _groups)
-    return group
-
-
-def get_group(group_id: str) -> Group | None:
-    raw = _groups.get(group_id)
-    return Group(**raw) if raw else None
-
-
-def get_group_by_code(code: str) -> Group | None:
-    for raw in _groups.values():
-        if raw["code"].upper() == code.upper():
-            return Group(**raw)
-    return None
-
-
-def join_group(code: str, member_name: str) -> Group | None:
-    group = get_group_by_code(code)
-    if not group:
-        return None
-    if member_name not in group.member_names:
-        group.member_names.append(member_name)
-        _groups[group.id] = group.model_dump()
-        _save(GROUPS_PATH, _groups)
-    return group
-
-
-# ---- identity vectors ----
-def _identity_key(group_id: str, member_name: str) -> str:
-    return f"{group_id}:{member_name}"
-
-
-def save_identity_from_survey(payload: SurveyStartIn) -> IdentityVector:
-    key = _identity_key(payload.group_id, payload.member_name)
-    existing = _identities.get(key)
-    version = (existing["version"] + 1) if existing else 1
-    identity = IdentityVector(
-        member_name=payload.member_name, group_id=payload.group_id,
-        budget_min=payload.budget_min, budget_max=payload.budget_max, pace=payload.pace,
-        likes=payload.likes, dislikes=payload.dislikes,
-        hard_constraints=payload.hard_constraints, notes=payload.notes, version=version,
-    )
-    _identities[key] = identity.model_dump()
-    _save(IDENTITIES_PATH, _identities)
-    return identity
-
-
-def get_identity(group_id: str, member_name: str) -> IdentityVector | None:
-    raw = _identities.get(_identity_key(group_id, member_name))
-    return IdentityVector(**raw) if raw else None
-
-
-def list_identities(group_id: str) -> list[IdentityVector]:
-    return [IdentityVector(**v) for k, v in _identities.items() if v["group_id"] == group_id]
-
-
-# ---- end-of-trip surveys ----
 def save_end_survey(payload: SurveyEndIn) -> dict:
     entry = payload.model_dump()
     _end_surveys.append(entry)
@@ -118,5 +43,5 @@ def save_end_survey(payload: SurveyEndIn) -> dict:
     return entry
 
 
-def list_end_surveys(group_id: str) -> list[dict]:
+def list_end_surveys(group_id: int) -> list[dict]:
     return [s for s in _end_surveys if s["group_id"] == group_id]

@@ -1,0 +1,8 @@
+# Vercel's Python builder looks for requirements.txt next to the entrypoint
+# (api/index.py) — this just points pip at the real one so there's a single
+# source of truth. Add -r ../requirements-agents.txt too if you want the
+# multi-agent extras (LangGraph/Neo4j/ChromaDB/CrewAI) live on Vercel as well —
+# left out by default to keep cold-start size and build time down; GraphRAG and
+# vector memory already degrade gracefully to their static/keyword fallbacks
+# without it (see docs/architecture-v2/SYSTEM_ARCHITECTURE.md).
+-r ../requirements.txt

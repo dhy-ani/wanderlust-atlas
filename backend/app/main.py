@@ -3,18 +3,32 @@
 Run:  uvicorn app.main:app --reload --port 8000
 Docs: http://localhost:8000/docs
 """
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import destinations, flights, group, negotiate, places, predictions, routes, survey, weather
+from app.db.engine import init_db
+from app.routers import (
+    auth, availability, destinations, flights, group, negotiate, places,
+    predictions, research, routes, survey, weather, wishlist,
+)
 
 settings = get_settings()
+
+
+@asynccontextmanager
+async def _lifespan(_app: FastAPI):
+    init_db()
+    yield
+
 
 app = FastAPI(
     title="Wanderlust Atlas API",
     version="1.0.0",
-    description="Flights, weather, ML price prediction, places & route planning.",
+    description="Flights, weather, ML price prediction, places, routes, and multi-agent group trip planning.",
+    lifespan=_lifespan,
 )
 
 app.add_middleware(
@@ -30,9 +44,13 @@ app.include_router(weather.router)
 app.include_router(places.router)
 app.include_router(predictions.router)
 app.include_router(routes.router)
+app.include_router(auth.router)
 app.include_router(group.router)
+app.include_router(wishlist.router)
+app.include_router(availability.router)
 app.include_router(survey.router)
 app.include_router(negotiate.router)
+app.include_router(research.router)
 
 
 @app.get("/api/health")

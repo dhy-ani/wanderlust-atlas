@@ -27,6 +27,11 @@ backend/data/end_surveys.json
 backend/data/memory_fallback.json
 backend/data/llm_cache.sqlite3
 backend/data/chroma/
+backend/data/app.db
+backend/data/test_app.db
+
+# --- Vercel ---
+.vercel/
 
 # --- node / vite ---
 node_modules/

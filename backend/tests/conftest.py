@@ -4,12 +4,50 @@ OPENROUTER_API_KEY being present (e.g. for manual live-verification) must never
 cause routine `pytest` runs to silently make real, billed API calls. This
 autouse fixture forces `llm_client.has_llm()` to False for every test unless a
 test explicitly opts back in via `monkeypatch.setattr(llm_client, "has_llm", ...)`
-after this fixture runs."""
-import pytest
+after this fixture runs.
 
-from app.agents import llm_client
+Also points DATABASE_URL at a throwaway SQLite file so tests never touch the
+real backend/data/app.db — must happen before ANYTHING imports app.db.engine
+(which reads DATABASE_URL at import time), hence doing it at module scope here,
+since pytest always imports conftest.py before any test module in this dir.
+"""
+import os
+from pathlib import Path
+
+_TEST_DB = Path(__file__).resolve().parents[1] / "data" / "test_app.db"
+_TEST_DB.parent.mkdir(parents=True, exist_ok=True)
+if _TEST_DB.exists():
+    _TEST_DB.unlink()
+os.environ["DATABASE_URL"] = f"sqlite:///{_TEST_DB}"
+
+import pytest  # noqa: E402
+
+from app.agents import llm_client  # noqa: E402
+from app.db.engine import init_db  # noqa: E402
+
+init_db()
 
 
 @pytest.fixture(autouse=True)
 def no_real_llm_calls_in_tests(monkeypatch):
     monkeypatch.setattr(llm_client, "has_llm", lambda: False)
+
+
+@pytest.fixture
+def client():
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+    return TestClient(app)
+
+
+@pytest.fixture
+def auth_headers(client):
+    """Signs up a fresh, unique test user and returns Authorization headers."""
+    import secrets
+
+    email = f"test-{secrets.token_hex(6)}@example.com"
+    resp = client.post("/api/auth/signup", json={"email": email, "password": "password123", "name": "Test User"})
+    assert resp.status_code == 201, resp.text
+    token = resp.json()["token"]
+    return {"Authorization": f"Bearer {token}"}

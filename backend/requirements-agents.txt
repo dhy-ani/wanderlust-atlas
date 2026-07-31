@@ -6,3 +6,10 @@
 langgraph==0.2.60
 neo4j==5.27.0
 chromadb==0.5.23
+
+# Web-research crew (best time to visit / cheap tickets / trending activities).
+# Works without these installed too — research_crew.py returns a clear
+# "not configured" result instead of crashing.
+crewai==0.86.0
+crewai-tools==0.17.0
+tavily-python==0.5.0

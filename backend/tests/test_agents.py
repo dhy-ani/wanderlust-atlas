@@ -170,3 +170,15 @@ def test_build_initial_proposal_never_mixes_destinations():
 def test_build_initial_proposal_unknown_destination_returns_empty():
     proposal = build_initial_proposal("atlantis", [])
     assert proposal.items == []
+
+
+def test_build_initial_proposal_never_exceeds_the_tightest_budget():
+    # A very tight budget should never be exceeded, even if it means fewer
+    # items than top_n — "don't suggest something way above budget."
+    tight = make_identity("Tight", group="g-budget-guard", budget_max=25)
+    generous = make_identity("Generous", group="g-budget-guard", budget_max=5000)
+
+    proposal = build_initial_proposal("paris", [DigitalTwin(tight), DigitalTwin(generous)], top_n=4)
+
+    assert proposal.total_cost <= 25
+    assert sum(i.est_cost for i in proposal.items) == proposal.total_cost

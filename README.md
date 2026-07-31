@@ -155,6 +155,24 @@ realistic mock/fallback. Add real keys to `.env` to switch each feature to live
 data; see [`docs/SETUP.md`](docs/SETUP.md) for exactly where to get each one
 (most are free tiers).
 
+### Option C — Vercel (full-stack: static frontend + serverless API)
+
+```bash
+npm i -g vercel        # once
+vercel login
+vercel                  # from the project root — deploys frontend + backend/api/index.py together
+```
+
+Set these as Vercel project environment variables first (Project → Settings →
+Environment Variables): `DATABASE_URL` (a Postgres connection string — Vercel
+Postgres or [Neon](https://neon.tech)'s free tier both work), `JWT_SECRET` (a
+real random value — see `.env.example` for how to generate one), and any of
+the optional API keys you want live (`OPENROUTER_API_KEY`, `TAVILY_API_KEY`,
+`AMADEUS_CLIENT_ID`/`SECRET`, etc.). Neo4j/ChromaDB are intentionally left
+unset on Vercel — GraphRAG and vector memory fall back to their built-in
+static/keyword modes, which is the right default for a serverless deploy (see
+[`docs/architecture-v2/DESIGN_RATIONALE.md`](docs/architecture-v2/DESIGN_RATIONALE.md) §8).
+
 ### Running the tests
 
 ```bash
@@ -169,12 +187,15 @@ pytest --cov=app             # with coverage report
 wanderlust-atlas/
 ├── backend/                  FastAPI application
 │   ├── app/
-│   │   ├── routers/          HTTP endpoints (one file per feature)
+│   │   ├── routers/          HTTP endpoints (one file per feature, incl. auth/wishlist/availability)
 │   │   ├── services/         Real API clients + mock fallback for each
 │   │   ├── ml/                Trainable flight-price + best-time models
-│   │   ├── agents/            Multi-agent negotiation system (twins, mediator,
-│   │   │                      GraphRAG, vector memory, cost-guarded LLM client)
+│   │   ├── db/                 SQLAlchemy models + engine (SQLite locally, Postgres on Vercel)
+│   │   ├── agents/            Multi-agent system: twins, LangGraph mediator, GraphRAG,
+│   │   │                      vector memory, cost-guarded LLM client, CrewAI research
+│   │   │                      crew, and the Documentation Agent
 │   │   └── models/           Pydantic request/response schemas
+│   ├── api/index.py           Vercel serverless entrypoint (re-exports the same FastAPI app)
 │   ├── data/                 Seed datasets (destinations, points of interest,
 │   │                          graph relationships) + runtime state (gitignored)
 │   ├── scripts/               GraphRAG ingestion, mutation-score CI gate
@@ -184,36 +205,57 @@ wanderlust-atlas/
 │       ├── globe/             3D satellite globe, pins, dashed routes
 │       ├── panels/            Detail / map / route / bucket / negotiation UI
 │       ├── logic/             Pure, unit-testable business logic
+│       ├── auth.js             Sign up / log in / JWT storage
 │       └── staticApi.js       Client-side fallback used for the GitHub Pages build
 ├── docker-compose.yml         Base stack: backend + frontend (nginx)
 ├── docker-compose.agents.yml  Adds Neo4j + ChromaDB for the agent system
+├── vercel.json                 Full-stack Vercel deployment config
 └── docs/                      Architecture, setup, ML explainer, Docker guide,
                                 and architecture-v2/ (the multi-agent system's
-                                design doc + implementation checklist)
+                                design doc, rationale, and implementation checklist)
 ```
 
 ## 🤝 Multi-agent group trip planning
 
-Plan a trip as a group instead of alone: an admin creates a group and gets a
-join code; each member fills a short preference survey, which becomes their
-**Digital Twin's** Identity Vector. Pick a destination from the group's bucket
-list, and the **Mediator** proposes a route through real points of interest
-inside it — sourced from a Neo4j knowledge graph and a Reddit-based trending
-signal, filtered by what the group actually likes. Each twin scores the
-proposal; if the blended score is below 80 (or two or more people reject it),
-the mediator reconfigures using graph-sourced alternatives and tries again.
+Plan a trip as a group instead of alone, with **real accounts** (email +
+password, JWT sessions) behind every part of it:
+
+1. **Sign up**, create a group, and share the join code — or join one.
+2. Each member fills a short preference survey (their **Digital Twin's**
+   Identity Vector) and adds destinations to the group's **shared wishlist**
+   (server-persisted, visible to every member — not a personal local list).
+3. Everyone submits when they're free; `GET /availability/overlap` computes
+   the actual window everyone has in common.
+4. Pick one wishlist destination, and the **Mediator** (LangGraph) proposes a
+   route through real points of interest inside it — sourced from a Neo4j
+   knowledge graph, a Reddit-based trending signal, and never proposing more
+   than the group's tightest budget can afford. Each twin scores it; below 80
+   (or 2+ rejections), the mediator reconfigures via GraphRAG and tries again.
+5. A separate **CrewAI research crew** (4 agents: timing, price, trends, and a
+   Negotiator that evaluates and budget-checks the other three's findings) can
+   research any destination on the open web via Tavily search, on demand.
+6. A **Documentation Agent** turns the finished negotiation into a clear,
+   human-readable record of who rejected what and why — deterministically, no
+   extra LLM call, since that reasoning was already captured for free.
+
+**Read [`docs/architecture-v2/DESIGN_RATIONALE.md`](docs/architecture-v2/DESIGN_RATIONALE.md)**
+for *why* it's built this way (two agent frameworks on purpose, layered cost
+guardrails, why Reddit not Instagram, why real accounts changed the storage
+layer) — and [`docs/architecture-v2/SYSTEM_ARCHITECTURE.md`](docs/architecture-v2/SYSTEM_ARCHITECTURE.md)
+for the component-level design.
 
 - Runs entirely on a **free, deterministic rule-based scorer** by default — the
-  whole negotiation loop is provably correct at $0, tested in
-  `backend/tests/test_agents.py`.
-- Add `OPENROUTER_API_KEY` to upgrade genuinely ambiguous scoring decisions to a
-  real LLM call — batched across all twins, cached by content hash, and hard
-  -capped (per-minute/per-day/per-run) so nothing can run away on cost. Verified
-  end-to-end with a real key: real English-language reasoning, correctly cached
-  on a repeat call, and correctly blocked when a cap is hit.
+  whole negotiation loop, storage, auth, and wishlist are provably correct at
+  $0, tested in `backend/tests/` (93+ tests, no external keys needed).
+- Add `OPENROUTER_API_KEY` to upgrade genuinely ambiguous scoring to a real LLM
+  call — batched, cached by content hash, and hard-capped
+  (per-minute/per-day/per-run). Add `TAVILY_API_KEY` too to enable the
+  web-research crew. Verified end-to-end with real keys.
+- Deploys full-stack to **Vercel** (`vercel.json` — static frontend + FastAPI
+  serverless function + Postgres) or stays on Docker Compose (SQLite +
+  optional Neo4j/ChromaDB) — same codebase, one `DATABASE_URL` switch.
 - Try it in the app: **🤝 Group Plan** in the bottom toolbar (needs the backend
-  running — see [docs/architecture-v2/SYSTEM_ARCHITECTURE.md](docs/architecture-v2/SYSTEM_ARCHITECTURE.md)
-  for the full design, including exactly how LLM cost is kept low).
+  running).
 
 ## Documentation index
 
@@ -225,4 +267,5 @@ the mediator reconfigures using graph-sourced alternatives and tries again.
 | [`docs/DOCKER.md`](docs/DOCKER.md) | Docker concepts, taught using this repo's actual files |
 | [`docs/DEPLOY.md`](docs/DEPLOY.md) | How the GitHub Pages static build works and how to redeploy it |
 | [`docs/architecture-v2/SYSTEM_ARCHITECTURE.md`](docs/architecture-v2/SYSTEM_ARCHITECTURE.md) | The multi-agent system's design, diagrams, and cost-control architecture |
+| [`docs/architecture-v2/DESIGN_RATIONALE.md`](docs/architecture-v2/DESIGN_RATIONALE.md) | **Why** it's built this way — the reasoning behind every major agent-system decision |
 | [`docs/architecture-v2/IMPLEMENTATION_CHECKLIST.md`](docs/architecture-v2/IMPLEMENTATION_CHECKLIST.md) | Exactly what's built vs. still open, with evidence |
