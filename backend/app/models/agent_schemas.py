@@ -68,7 +68,8 @@ class AvailabilityWindowOut(BaseModel):
 #  Identity Vector — the structured core of a Digital Twin
 # --------------------------------------------------------------------------- #
 class IdentityVector(BaseModel):
-    """A twin's preferences. Structured fields drive the free rule-based scorer;
+    """A twin's preferences. Structured fields drive the free rule-based scorer
+    AND get handed to the Research/Planner agents as personalization context;
     `notes` is free text that gets embedded into ChromaDB for semantic recall."""
     member_name: str
     group_id: str
@@ -80,6 +81,17 @@ class IdentityVector(BaseModel):
     likes: list[str] = Field(default_factory=list)      # e.g. ["hiking", "museums", "nightlife"]
     dislikes: list[str] = Field(default_factory=list)    # e.g. ["crowds", "beaches"]
     hard_constraints: list[str] = Field(default_factory=list)  # e.g. ["no red-eye flights"]
+
+    # --- richer personalization (the "ask as many questions as you can" intake) ---
+    accommodation_style: Literal["budget", "mid-range", "luxury", "any"] = "any"
+    food_preferences: list[str] = Field(default_factory=list)   # e.g. ["vegetarian", "street food", "fine dining"]
+    must_see: list[str] = Field(default_factory=list)            # specific non-negotiable items, distinct from `likes` categories
+    avoid: list[str] = Field(default_factory=list)                # specific things to avoid, distinct from `dislikes` categories
+    chronotype: Literal["early_bird", "night_owl", "flexible"] = "flexible"
+    transportation_pref: Literal["walk", "public_transit", "rental_car", "rideshare", "any"] = "any"
+    trip_priority: Literal["relaxation", "adventure", "culture", "food", "nature", "mixed"] = "mixed"
+    accessibility_needs: str = ""
+
     notes: str = ""                                       # free text, embedded for semantic recall
 
     version: int = 1                                      # bumped on every update; part of the LLM cache key
@@ -97,6 +109,14 @@ class SurveyStartIn(BaseModel):
     likes: list[str] = Field(default_factory=list)
     dislikes: list[str] = Field(default_factory=list)
     hard_constraints: list[str] = Field(default_factory=list)
+    accommodation_style: Literal["budget", "mid-range", "luxury", "any"] = "any"
+    food_preferences: list[str] = Field(default_factory=list)
+    must_see: list[str] = Field(default_factory=list)
+    avoid: list[str] = Field(default_factory=list)
+    chronotype: Literal["early_bird", "night_owl", "flexible"] = "flexible"
+    transportation_pref: Literal["walk", "public_transit", "rental_car", "rideshare", "any"] = "any"
+    trip_priority: Literal["relaxation", "adventure", "culture", "food", "nature", "mixed"] = "mixed"
+    accessibility_needs: str = ""
     notes: str = ""
 
 

@@ -112,7 +112,7 @@ export const staticApi = {
     const baseP = simulatePrice(destId, origin, depart.getMonth() + 1, daysOut);
     const offers = [];
     for (let i = 0; i < 5; i++) {
-      const s = seed(origin, destId, i);
+      const s = seed(origin, destId,i); 
       const stops = (s >> 3) % 3;
       const price = Math.max(120, Math.round(baseP * (0.9 + (s % 45) / 100)) - stops * 35);
       offers.push({

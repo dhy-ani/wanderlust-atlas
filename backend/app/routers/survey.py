@@ -24,11 +24,22 @@ def _require_member(group_id: int, user: User, db: Session) -> None:
         raise HTTPException(403, "you're not a member of this group")
 
 
+_RICH_FIELDS = [
+    "budget_min", "budget_max", "pace", "likes", "dislikes", "hard_constraints",
+    "accommodation_style", "food_preferences", "must_see", "avoid", "chronotype",
+    "transportation_pref", "trip_priority", "accessibility_needs", "notes",
+]
+
+
 def _to_vector(row: Identity, member_name: str) -> IdentityVector:
     return IdentityVector(
         member_name=member_name, group_id=str(row.group_id), budget_min=row.budget_min, budget_max=row.budget_max,
         pace=row.pace, likes=row.likes, dislikes=row.dislikes, hard_constraints=row.hard_constraints,
-        notes=row.notes, version=row.version, updated_at=row.updated_at.isoformat(),
+        accommodation_style=row.accommodation_style, food_preferences=row.food_preferences,
+        must_see=row.must_see, avoid=row.avoid, chronotype=row.chronotype,
+        transportation_pref=row.transportation_pref, trip_priority=row.trip_priority,
+        accessibility_needs=row.accessibility_needs, notes=row.notes,
+        version=row.version, updated_at=row.updated_at.isoformat(),
     )
 
 
@@ -36,18 +47,12 @@ def _to_vector(row: Identity, member_name: str) -> IdentityVector:
 def survey_start(payload: SurveyStartIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     _require_member(payload.group_id, user, db)
     existing = db.query(Identity).filter(Identity.group_id == payload.group_id, Identity.user_id == user.id).first()
+    row = existing or Identity(group_id=payload.group_id, user_id=user.id)
+    for field in _RICH_FIELDS:
+        setattr(row, field, getattr(payload, field))
     if existing:
-        existing.budget_min, existing.budget_max, existing.pace = payload.budget_min, payload.budget_max, payload.pace
-        existing.likes, existing.dislikes, existing.hard_constraints = payload.likes, payload.dislikes, payload.hard_constraints
-        existing.notes = payload.notes
-        existing.version += 1
-        row = existing
+        row.version += 1
     else:
-        row = Identity(
-            group_id=payload.group_id, user_id=user.id, budget_min=payload.budget_min, budget_max=payload.budget_max,
-            pace=payload.pace, likes=payload.likes, dislikes=payload.dislikes,
-            hard_constraints=payload.hard_constraints, notes=payload.notes,
-        )
         db.add(row)
     db.commit()
     db.refresh(row)

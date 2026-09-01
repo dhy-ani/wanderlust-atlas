@@ -2,7 +2,7 @@
 // own preference survey, add to the group's SHARED wishlist, submit when
 // you're free, and negotiate a route within one destination via each
 // member's Digital Twin. Talks to the real Python backend (FastAPI +
-// LangGraph + GraphRAG + CrewAI) — GitHub Pages can't run that, so static
+// LangGraph + LangChain + GraphRAG) — GitHub Pages can't run that, so static
 // builds show an explainer instead of firing requests that would 404.
 import { API_BASE } from '../config.js';
 import { USE_STATIC } from '../api.js';
@@ -46,7 +46,7 @@ export function initNegotiationPanel({ getBucketDestinations }) {
   function renderStaticNotice() {
     body.innerHTML = `
       <div class="negoIntro">Group trip planning runs a real multi-agent backend
-        (FastAPI + LangGraph + GraphRAG + CrewAI) with real accounts — that
+        (FastAPI + LangGraph + LangChain + GraphRAG) with real accounts — that
         needs a live Python server + database, which this static demo
         (GitHub Pages) doesn't run.</div>
       <div class="negoCard">
@@ -147,11 +147,32 @@ export function initNegotiationPanel({ getBucketDestinations }) {
         <div class="negoMembers">${group.members.map((m) => `<span class="negoMemberChip">${m.name}</span>`).join('')}</div>
       </div>
       <div class="negoSplit">
-        <div class="negoCard">
-          <h4>Your Digital Twin preferences</h4>
-          <label>Budget max ($)</label><input id="ngBudget" type="number" value="1500"/>
-          <label>Likes (comma-separated)</label><input id="ngLikes" placeholder="museums, food, hiking"/>
-          <label>Dislikes (comma-separated)</label><input id="ngDislikes" placeholder="beaches, nightlife"/>
+        <div class="negoCard negoSurveyCard">
+          <h4>Your Digital Twin — the more you answer, the more personalized the plan</h4>
+
+          <label>Budget max, total ($)</label><input id="ngBudget" type="number" value="1500"/>
+          <label>Overall pace</label>
+          <select id="ngPace"><option value="relaxed">Relaxed</option><option value="balanced" selected>Balanced</option><option value="packed">Packed</option></select>
+
+          <label>What do you like? (comma-separated)</label><input id="ngLikes" placeholder="museums, food, hiking"/>
+          <label>What do you dislike? (comma-separated)</label><input id="ngDislikes" placeholder="beaches, nightlife"/>
+          <label>Hard constraints — non-negotiable (comma-separated)</label><input id="ngHardConstraints" placeholder="no red-eye flights, need wifi"/>
+
+          <label>Accommodation style</label>
+          <select id="ngAccommodation"><option value="any" selected>Any</option><option value="budget">Budget</option><option value="mid-range">Mid-range</option><option value="luxury">Luxury</option></select>
+          <label>Food preferences (comma-separated)</label><input id="ngFood" placeholder="vegetarian, street food, fine dining"/>
+          <label>Specific must-see things (comma-separated)</label><input id="ngMustSee" placeholder="Eiffel Tower at sunset"/>
+          <label>Specific things to avoid (comma-separated)</label><input id="ngAvoid" placeholder="long queues, red-eye flights"/>
+
+          <label>Are you a morning or night person?</label>
+          <select id="ngChronotype"><option value="flexible" selected>Flexible</option><option value="early_bird">Early bird</option><option value="night_owl">Night owl</option></select>
+          <label>Preferred way to get around</label>
+          <select id="ngTransport"><option value="any" selected>Any</option><option value="walk">Walk</option><option value="public_transit">Public transit</option><option value="rental_car">Rental car</option><option value="rideshare">Rideshare</option></select>
+          <label>Top priority for this trip</label>
+          <select id="ngPriority"><option value="mixed" selected>A bit of everything</option><option value="relaxation">Relaxation</option><option value="adventure">Adventure</option><option value="culture">Culture</option><option value="food">Food</option><option value="nature">Nature</option></select>
+          <label>Any accessibility needs?</label><input id="ngAccessibility" placeholder="optional — e.g. step-free access"/>
+          <label>Anything else? (free text — helps future trips too)</label><input id="ngNotes" placeholder="optional notes"/>
+
           <button id="ngSurveyBtn">Save Preferences</button>
           <div id="ngSurveyStatus" class="negoStatus"></div>
         </div>
@@ -186,13 +207,23 @@ export function initNegotiationPanel({ getBucketDestinations }) {
       <div id="ngPreview" class="negoItems"></div>
       <div id="ngTranscript" class="negoTranscript"></div>`;
 
+    const csv = (id) => document.getElementById(id).value.split(',').map((s) => s.trim()).filter(Boolean);
     document.getElementById('ngSurveyBtn').onclick = async () => {
-      const budget_max = parseFloat(document.getElementById('ngBudget').value) || 1500;
-      const likes = document.getElementById('ngLikes').value.split(',').map((s) => s.trim()).filter(Boolean);
-      const dislikes = document.getElementById('ngDislikes').value.split(',').map((s) => s.trim()).filter(Boolean);
       const status = document.getElementById('ngSurveyStatus');
       try {
-        await post('/survey/start', { group_id: group.id, budget_max, likes, dislikes });
+        await post('/survey/start', {
+          group_id: group.id,
+          budget_max: parseFloat(document.getElementById('ngBudget').value) || 1500,
+          pace: document.getElementById('ngPace').value,
+          likes: csv('ngLikes'), dislikes: csv('ngDislikes'), hard_constraints: csv('ngHardConstraints'),
+          accommodation_style: document.getElementById('ngAccommodation').value,
+          food_preferences: csv('ngFood'), must_see: csv('ngMustSee'), avoid: csv('ngAvoid'),
+          chronotype: document.getElementById('ngChronotype').value,
+          transportation_pref: document.getElementById('ngTransport').value,
+          trip_priority: document.getElementById('ngPriority').value,
+          accessibility_needs: document.getElementById('ngAccessibility').value.trim(),
+          notes: document.getElementById('ngNotes').value.trim(),
+        });
         status.textContent = '✓ Saved your preferences';
       } catch (e) { status.textContent = `Failed: ${e.message}`; }
     };

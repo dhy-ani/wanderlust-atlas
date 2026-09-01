@@ -64,6 +64,15 @@ class Identity(Base):
     likes: Mapped[list] = mapped_column(JSON, default=list)
     dislikes: Mapped[list] = mapped_column(JSON, default=list)
     hard_constraints: Mapped[list] = mapped_column(JSON, default=list)
+    # --- richer personalization ---
+    accommodation_style: Mapped[str] = mapped_column(String(20), default="any")
+    food_preferences: Mapped[list] = mapped_column(JSON, default=list)
+    must_see: Mapped[list] = mapped_column(JSON, default=list)
+    avoid: Mapped[list] = mapped_column(JSON, default=list)
+    chronotype: Mapped[str] = mapped_column(String(20), default="flexible")
+    transportation_pref: Mapped[str] = mapped_column(String(20), default="any")
+    trip_priority: Mapped[str] = mapped_column(String(20), default="mixed")
+    accessibility_needs: Mapped[str] = mapped_column(Text, default="")
     notes: Mapped[str] = mapped_column(Text, default="")
     version: Mapped[int] = mapped_column(default=1)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_now, onupdate=_now)
@@ -96,9 +105,9 @@ class Availability(Base):
 
 
 class DestinationResearch(Base):
-    """Cached output of the CrewAI web-research crew for one destination —
+    """Cached output of the Research Agent's web research for one destination —
     avoids re-searching (and re-spending) on every page view. Treated as stale
-    after RESEARCH_TTL_HOURS (see agents/research_crew.py)."""
+    after RESEARCH_TTL_HOURS (see agents/research_agent.py)."""
     __tablename__ = "destination_research"
     id: Mapped[int] = mapped_column(primary_key=True)
     destination_key: Mapped[str] = mapped_column(String(200), unique=True, index=True)

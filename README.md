@@ -191,9 +191,10 @@ wanderlust-atlas/
 │   │   ├── services/         Real API clients + mock fallback for each
 │   │   ├── ml/                Trainable flight-price + best-time models
 │   │   ├── db/                 SQLAlchemy models + engine (SQLite locally, Postgres on Vercel)
-│   │   ├── agents/            Multi-agent system: twins, LangGraph mediator, GraphRAG,
-│   │   │                      vector memory, cost-guarded LLM client, CrewAI research
-│   │   │                      crew, and the Documentation Agent
+│   │   ├── agents/            Multi-agent system, one LangGraph pipeline: Digital
+│   │   │                      Twins, Research Agent (LangChain + Tavily), Planner,
+│   │   │                      Negotiator, Documentation Agent, GraphRAG, vector
+│   │   │                      memory, cost-guarded LLM client
 │   │   └── models/           Pydantic request/response schemas
 │   ├── api/index.py           Vercel serverless entrypoint (re-exports the same FastAPI app)
 │   ├── data/                 Seed datasets (destinations, points of interest,
@@ -221,19 +222,26 @@ Plan a trip as a group instead of alone, with **real accounts** (email +
 password, JWT sessions) behind every part of it:
 
 1. **Sign up**, create a group, and share the join code — or join one.
-2. Each member fills a short preference survey (their **Digital Twin's**
-   Identity Vector) and adds destinations to the group's **shared wishlist**
+2. Each member fills a **rich 15-field preference survey** (budget, likes/
+   dislikes, food preferences, accommodation style, must-see items, trip
+   priority, chronotype, accessibility needs...) — their **Digital Twin's**
+   Identity Vector — and adds destinations to the group's **shared wishlist**
    (server-persisted, visible to every member — not a personal local list).
 3. Everyone submits when they're free; `GET /availability/overlap` computes
    the actual window everyone has in common.
-4. Pick one wishlist destination, and the **Mediator** (LangGraph) proposes a
-   route through real points of interest inside it — sourced from a Neo4j
-   knowledge graph, a Reddit-based trending signal, and never proposing more
-   than the group's tightest budget can afford. Each twin scores it; below 80
-   (or 2+ rejections), the mediator reconfigures via GraphRAG and tries again.
-5. A separate **CrewAI research crew** (4 agents: timing, price, trends, and a
-   Negotiator that evaluates and budget-checks the other three's findings) can
-   research any destination on the open web via Tavily search, on demand.
+4. Pick one wishlist destination. The negotiation is **one LangGraph
+   pipeline** with four distinct agent roles: the **Research Agent**
+   (LangChain + Tavily) finds real points of interest informed by the WHOLE
+   group's aggregated needs — not the destination name in isolation — falling
+   back to a static GraphRAG seed dataset when no search/LLM key is
+   configured; the **Planner Agent** turns that into a concrete,
+   budget-capped route (never proposing more than the group's tightest
+   budget can afford); each **Digital Twin** scores it; below 80 (or 2+
+   rejections), the **Negotiator Agent** decides what needs to change and
+   sends a fresh directive back to Research, which tries again.
+5. The same Research Agent also answers on-demand "best time to visit /
+   price trends / what's popular" for any destination (`POST /api/research/
+   {id}`), budget-aware.
 6. A **Documentation Agent** turns the finished negotiation into a clear,
    human-readable record of who rejected what and why — deterministically, no
    extra LLM call, since that reasoning was already captured for free.

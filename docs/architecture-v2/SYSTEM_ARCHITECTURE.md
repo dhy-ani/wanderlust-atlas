@@ -1,21 +1,41 @@
 # System Architecture — Multi-Agent Group Trip Planner
 
-Branch: `agent-integration`. This document describes the target architecture and,
-where a section says **[BUILT]**, that piece is real and tested on this branch today.
-Everything else is designed but not yet implemented — see
-[`IMPLEMENTATION_CHECKLIST.md`](IMPLEMENTATION_CHECKLIST.md) for exact status.
+This document describes the current architecture and, where a section says
+**[BUILT]**, that piece is real and tested today. Everything else is designed but
+not yet implemented — see [`IMPLEMENTATION_CHECKLIST.md`](IMPLEMENTATION_CHECKLIST.md)
+for exact status. See [`DESIGN_RATIONALE.md`](DESIGN_RATIONALE.md) for *why* it's
+built this way.
 
 ## The idea, restated precisely
 
 A **group** (like a group chat) is created by an **admin** who sets a join code.
-Anyone with the link + code joins and fills out a **start survey** (what they like,
-budget, dislikes) — this becomes their **Identity Vector**. Each member gets a
-**Digital Twin**: an agent that argues on their behalf during planning, using their
-Identity Vector plus anything learned from past trips (vector memory) and contextual
-world knowledge (GraphRAG). A **Mediator** proposes an itinerary; twins score it;
-if the blended score is **< 80**, the mediator reconfigures using GraphRAG-sourced
-alternatives and tries again. When the trip is over, an **end survey** captures what
-worked and what didn't, feeding back into each twin's memory for next time.
+Anyone with the link + code (real accounts — bcrypt + JWT) joins and fills out a
+**rich preference survey** (budget, likes/dislikes, food preferences, accommodation
+style, must-see items, chronotype, transportation, trip priority, accessibility
+needs...) — this becomes their **Identity Vector**. Each member gets a **Digital
+Twin**: an agent that argues on their behalf during planning, using their Identity
+Vector plus anything learned from past trips (vector memory).
+
+The negotiation itself is **one LangGraph state machine** coordinating four
+distinct agent roles — not a monolithic "mediator does everything," and not a
+second framework bolted on the side:
+
+- **Research** finds real points of interest for the destination, informed by the
+  WHOLE group's aggregated needs (not just the destination name in isolation) —
+  real web search via LangChain + Tavily when configured, falling back to a
+  static seed dataset otherwise (see "hardcoded vs. real" below).
+- **Planner** turns Research's findings into a concrete, budget-capped Proposal.
+- **Twins** (one per member) score the Proposal.
+- **Negotiator** decides *what* needs to change when the score is too low, and
+  hands that directive back to Research — it doesn't pick the replacement
+  itself, it tells Research/Planner what to avoid and lets them re-plan.
+- **Documentation** compiles the finished negotiation into a clear record for
+  the group once it ends.
+
+If the blended score is **< 80** (or 2+ twins reject), the loop repeats
+(Negotiator → Research → Planner → Twins) up to 5 rounds. When the trip is over,
+an **end survey** captures what worked and what didn't, feeding back into each
+twin's memory for next time.
 
 ## Diagram
 
@@ -24,22 +44,27 @@ flowchart TB
     subgraph Client["FRONTEND (Vite + Three.js)"]
         Globe["3D Globe + Route Lines"]
         Chat["Negotiation Chat UI"]
-        Survey["Start / End Survey"]
-        TwinDash["Twin Preference Dashboard"]
+        Survey["Rich Preference Survey"]
+        Wishlist["Shared Group Wishlist"]
     end
 
     subgraph API["FASTAPI ORCHESTRATOR"]
-        REST["REST endpoints\n(group, survey, negotiate)"]
-        Graph["LangGraph negotiation engine"]
+        REST["REST endpoints\n(auth, group, survey, negotiate)"]
+        Auth["bcrypt + JWT accounts"]
     end
 
-    subgraph Agents["AGENT ECOSYSTEM"]
-        Mediator["Mediator / Negotiator Agent"]
-        TwinA["Digital Twin — User A"]
-        TwinB["Digital Twin — User B"]
-        TwinN["Digital Twin — User N"]
-        Scraper["Web/Weather Scraper Agent"]
+    subgraph Graph["ONE LANGGRAPH STATE MACHINE"]
+        direction TB
+        Research["Research Agent\n(LangChain + Tavily,\ngroup-needs-aware)"]
+        Planner["Planner Agent\n(budget-capped Proposal)"]
+        Twins["Digital Twins\n(one per member — score it)"]
+        Negotiator["Negotiator Agent\n(decides WHAT must change)"]
+        Research --> Planner --> Twins
+        Twins -- "score < 80 → directive" --> Negotiator
+        Negotiator -- "avoid these categories" --> Research
     end
+
+    Doc["Documentation Agent\n(compiles final record)"]
 
     subgraph Reasoning["COST-OPTIMIZED REASONING CORE"]
         Rules["Rule-based pre-scorer\n(free, deterministic)"]
@@ -47,28 +72,28 @@ flowchart TB
         LLM["OpenRouter LLM\n(cheapest-effective model)"]
     end
 
-    subgraph Data["TOOLS & DATA (MCP-wrapped)"]
+    subgraph Data["TOOLS & DATA"]
         Neo4j[("Neo4j — GraphRAG\nplaces · relationships · safety")]
         Chroma[("ChromaDB — per-twin\nsemantic memory")]
+        Tavily[("Tavily — real web search")]
         ML["XGBoost / GBM\nprice models"]
-        RealAPI["Amadeus · OpenWeather\n· Places (real APIs)"]
+        DB[("Postgres/SQLite\naccounts · groups · wishlist")]
     end
 
     Client -- HTTP/JSON --> REST
+    REST --> Auth
     REST --> Graph
-    Graph --> Mediator
-    Mediator <--> TwinA & TwinB & TwinN
-    Mediator --> Scraper
-    TwinA & TwinB & TwinN --> Rules
-    Rules -- "ambiguous score (55-90)\nor first-time proposal" --> Cache
+    Twins --> Rules
+    Rules -- "ambiguous score (55-90)" --> Cache
     Cache -- "cache miss" --> LLM
-    Cache -- "cache hit" --> TwinA
-    Mediator -- "pre-fetch context\n(1 round-trip, no tool loop)" --> Neo4j
-    Mediator --> Chroma
-    Mediator --> ML
-    Scraper --> RealAPI
-    Graph -- "score < 80 → reconfigure" --> Mediator
-    Graph -- "transcript + final plan" --> REST
+    Research --> Tavily
+    Research -- "fallback, not primary" --> Neo4j
+    Negotiator --> Chroma
+    Planner --> ML
+    Graph -- "accepted or max rounds" --> Doc
+    Doc -- "transcript + final plan" --> REST
+    Auth --> DB
+    REST --> DB
 ```
 
 ## Why this design keeps API calls (and cost) low
@@ -128,21 +153,27 @@ See `backend/app/agents/reasoner.py::score_proposal` and
 
 | Component | File(s) | Status |
 |---|---|---|
-| Identity Vector schema | `backend/app/models/agent_schemas.py` | **[BUILT]** |
+| Identity Vector schema (rich survey) | `backend/app/models/agent_schemas.py`, `backend/app/db/models.py` | **[BUILT]** — DB-backed, real accounts |
 | Rule-based scorer | `backend/app/agents/reasoner.py` | **[BUILT]** |
 | OpenRouter client + cache | `backend/app/agents/llm_client.py`, `cache.py` | **[BUILT]** (no-op without a key) |
 | Digital Twin | `backend/app/agents/twin.py` | **[BUILT]** |
-| Mediator / negotiation loop | `backend/app/agents/mediator.py` | **[BUILT]** (LangGraph-based) |
-| GraphRAG (Neo4j) | `backend/app/agents/graphrag.py` + `docker-compose.agents.yml` | **[BUILT]** client + ingestion; runs against real Neo4j |
+| Research Agent | `backend/app/agents/research_agent.py` | **[BUILT]** — LangChain + Tavily, falls back to static seed |
+| Planner Agent | `backend/app/agents/mediator.py::plan_proposal` | **[BUILT]** — budget-capped selection |
+| Negotiator Agent | `backend/app/agents/mediator.py::negotiator_directive` | **[BUILT]** — decides directive, doesn't pick the swap itself |
+| Documentation Agent | `backend/app/agents/documentation_agent.py` | **[BUILT]** — deterministic, no extra LLM call |
+| Unified negotiation pipeline | `backend/app/agents/mediator.py::run_negotiation` | **[BUILT]** — one LangGraph StateGraph, all four roles as nodes |
+| GraphRAG (Neo4j) | `backend/app/agents/graphrag.py` + `docker-compose.agents.yml` | **[BUILT]** client + ingestion; runs against real Neo4j; now Research's *fallback*, not primary source |
 | Vector memory (ChromaDB) | `backend/app/agents/memory.py` | **[BUILT]** client with graceful degrade |
-| Group / join-code | `backend/app/routers/group.py` | **[BUILT]** in-memory + JSON persistence |
-| Start/end survey | `backend/app/routers/survey.py` | **[BUILT]** |
+| Real accounts (bcrypt + JWT) | `backend/app/auth.py`, `routers/auth.py` | **[BUILT]** |
+| Group / join-code | `backend/app/routers/group.py` | **[BUILT]** — Postgres/SQLite, real accounts |
+| Shared group wishlist | `backend/app/routers/wishlist.py` | **[BUILT]** |
+| Availability overlap | `backend/app/routers/availability.py`, `app/scheduling.py` | **[BUILT]** |
+| Start/end survey | `backend/app/routers/survey.py` | **[BUILT]** — rich intake, 15 fields |
 | Negotiation endpoint | `backend/app/routers/negotiate.py` | **[BUILT]** |
-| Negotiation chat UI | `frontend/src/panels/negotiationPanel.js` | **[BUILT]** — picks a bucket-list destination, previews/runs the mediator's own POI proposal |
+| Negotiation chat UI | `frontend/src/panels/negotiationPanel.js` | **[BUILT]** — sign-in gated, rich survey form, wishlist, availability |
 | Web trending-signal agent | `backend/app/agents/scraper.py` | **[BUILT]** — Reddit public search (not Instagram; see checklist) |
 | Hard spend guardrails | `backend/app/agents/budget_guard.py` | **[BUILT]** — per-minute/day/run caps, verified with a real key |
-| Real Amadeus/ML retraining on Kaggle data | — | not built this session (needs dataset + real key) |
-| Twin preference dashboard (rich UI) | — | not built this session (basic survey form only) |
+| Real Amadeus/ML retraining on Kaggle data | — | not built (needs dataset + real key) |
 
 ## Real vs. mock, the same philosophy as the rest of the app
 
@@ -152,8 +183,13 @@ already do:
 | Dependency | Missing → | Present →|
 |---|---|---|
 | `OPENROUTER_API_KEY` | rule-based scoring only (fully functional, $0) | LLM tie-breaks ambiguous scores + writes chat-log prose |
+| `TAVILY_API_KEY` + `OPENROUTER_API_KEY` | Research uses the static GraphRAG seed dataset | Research Agent does real web search, informed by the group's aggregated needs |
 | Neo4j reachable | GraphRAG queries return a small built-in static relationship dict | real Cypher queries against ingested destination graph |
 | ChromaDB reachable | memory lookups return `[]` (no past-trip context) | real semantic search over each twin's trip history |
+| `DATABASE_URL` set | SQLite file (local/Docker) | Postgres (Vercel/hosted) |
 
-This means the whole negotiation loop is **testable end-to-end today**, for free,
-before you spend a cent on OpenRouter or run a single Docker container.
+This means the whole pipeline is **testable end-to-end today**, for free, before
+you spend a cent on OpenRouter/Tavily or run a single Docker container — verified
+live: a real negotiation with a real LLM call producing genuinely personalized
+reasoning (`"This trip perfectly aligns with Alice's love for museums and
+history..."`), sourced from her rich survey answers, not a template.

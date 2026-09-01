@@ -37,7 +37,11 @@ def _twins_for_group(group_id: int, db: Session) -> list[DigitalTwin]:
         IdentityVector(
             member_name=name, group_id=str(group_id), budget_min=row.budget_min, budget_max=row.budget_max,
             pace=row.pace, likes=row.likes, dislikes=row.dislikes, hard_constraints=row.hard_constraints,
-            notes=row.notes, version=row.version, updated_at=row.updated_at.isoformat(),
+            accommodation_style=row.accommodation_style, food_preferences=row.food_preferences,
+            must_see=row.must_see, avoid=row.avoid, chronotype=row.chronotype,
+            transportation_pref=row.transportation_pref, trip_priority=row.trip_priority,
+            accessibility_needs=row.accessibility_needs, notes=row.notes,
+            version=row.version, updated_at=row.updated_at.isoformat(),
         )
         for row, name in rows
     ]

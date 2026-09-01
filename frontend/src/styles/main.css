@@ -196,6 +196,7 @@ header .stat b{color:var(--brass-bright);font-size:20px;font-weight:600;display:
 .negoIntro{font-size:13px;color:var(--parchment-dim);line-height:1.55;margin-bottom:16px;}
 .negoSplit{display:flex;gap:16px;flex-wrap:wrap;}
 .negoCard{flex:1;min-width:260px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
+.negoSurveyCard{max-height:420px;overflow-y:auto;}
 .negoCard h4{margin:0 0 10px;font-family:'Fraunces',serif;font-size:15px;color:var(--brass-bright);}
 .negoCard input,.negoCard select{width:100%;padding:8px 10px;margin-bottom:8px;border-radius:6px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--parchment);font-size:13px;}
 .negoCard label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--brass);display:block;margin-bottom:4px;}

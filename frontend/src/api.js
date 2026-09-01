@@ -45,5 +45,4 @@ const realApi = {
   planRoute: (stops, optimize = false, roundTrip = false) =>
     post('/routes/plan', { stops, optimize, round_trip: roundTrip }),
 };
-
 export const api = USE_STATIC ? staticApi : realApi;

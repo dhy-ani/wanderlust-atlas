@@ -1,17 +1,17 @@
-"""On-demand web research for a destination — the CrewAI crew in
-agents/research_crew.py, cached in the DB so the same destination isn't
+"""On-demand web research for a destination — LangChain + Tavily in
+agents/research_agent.py, cached in the DB so the same destination isn't
 re-searched (and re-billed) on every request. Requires sign-in to prevent an
 anonymous caller from running up the (capped, but non-zero) LLM/search bill.
 
 If `group_id` is supplied, the group's minimum budget_max across all twins is
-passed to the crew's Negotiator agent as a hard ceiling to evaluate the other
-agents' findings against (see research_crew.py) — this is what stops the web
-research from surfacing a recommendation nobody in the group could afford.
+passed to the model as a hard ceiling to evaluate the research against (see
+research_agent.py::research_insights) — this is what stops the web research
+from surfacing a recommendation nobody in the group could afford.
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.agents import research_crew
+from app.agents import research_agent
 from app.auth import get_current_user
 from app.db.engine import get_db
 from app.db.models import DestinationResearch, GroupMember, Identity, User
@@ -42,14 +42,14 @@ def research_destination(
             raise HTTPException(403, "you're not a member of that group")
 
     cached = db.query(DestinationResearch).filter(DestinationResearch.destination_key == destination_id).first()
-    if cached and not force and not research_crew.is_stale(cached.created_at):
+    if cached and not force and not research_agent.is_stale(cached.created_at):
         return {
             "status": "ok", "cached": True, "best_time": cached.best_time, "price_insight": cached.price_insight,
             "top_activities": cached.top_activities, "recommendation": cached.recommendation,
         }
 
     max_budget = _group_budget_ceiling(group_id, db)
-    result = research_crew.run_research(dest["name"], max_budget=max_budget)
+    result = research_agent.research_insights(dest["name"], max_budget=max_budget)
     if result["status"] == "ok":
         if cached:
             cached.best_time, cached.price_insight = result["best_time"], result["price_insight"]
@@ -72,5 +72,5 @@ def get_cached_research(destination_id: str, db: Session = Depends(get_db)):
     return {
         "status": "ok", "best_time": cached.best_time, "price_insight": cached.price_insight,
         "top_activities": cached.top_activities, "recommendation": cached.recommendation,
-        "stale": research_crew.is_stale(cached.created_at),
+        "stale": research_agent.is_stale(cached.created_at),
     }
