@@ -28,19 +28,19 @@ export function initDetailPanel({ onAddBucket, onAddRoute, onOpenMap, onSearchNe
           <div class="pillList">${activities.map((a) => `<div class="pill">${a}</div>`).join('')}</div>` : ''}
          ${famous.length ? `<div class="sectionTitle">Famous For</div>
           <div class="pillList">${famous.map((a) => `<div class="pill famousPill">${a}</div>`).join('')}</div>` : ''}`
-      : `<div class="customNote">✨ Your custom destination. Live flights, prices &amp; weather are above.
-           Use <b>🔍 Nearby places</b> to explore what's around it.</div>`;
+      : `<div class="customNote">Your custom destination. Live flights, prices &amp; weather are above.
+           Use <b>Nearby places</b> to explore what's around it.</div>`;
 
     scroll.innerHTML = `
-      <div class="eyebrow">${dest.country} · ✈ ${dest.airport}${dest.custom ? ' · custom' : ''}${dest.added_by ? ` · added by ${dest.added_by}` : ''}</div>
+      <div class="eyebrow">${dest.country} · ${dest.airport}${dest.custom ? ' · custom' : ''}${dest.added_by ? ` · added by ${dest.added_by}` : ''}</div>
       <h2>${dest.name}</h2>
       ${dest.tagline ? `<div class="tagline">${dest.tagline}</div>` : ''}
 
       <div class="actionBar">
-        <button class="actBtn" id="btnMap">🛰️ Map / Street View</button>
-        <button class="actBtn" id="btnRoute">➕ Add to route</button>
-        <button class="actBtn" id="btnNearby">🔍 Nearby places</button>
-        <button class="actBtn danger" id="btnRemove">🗑️ Remove</button>
+        <button class="actBtn" id="btnMap">Map / Street View</button>
+        <button class="actBtn" id="btnRoute">Add to route</button>
+        <button class="actBtn" id="btnNearby">Nearby places</button>
+        <button class="actBtn danger" id="btnRemove">Remove</button>
       </div>
 
       <div class="metaRow">
@@ -62,7 +62,7 @@ export function initDetailPanel({ onAddBucket, onAddRoute, onOpenMap, onSearchNe
         <input type="number" id="daysInput" value="${dest.days}" min="1" max="60"/>
         <label>Estimated trip budget ($ total)</label>
         <input type="number" id="budgetInput" value="${dest.budgetLow * dest.days}" min="0"/>
-        <button id="addBucketBtn">✦ Add to Bucket List</button>
+        <button id="addBucketBtn">Add to Bucket List</button>
       </div>`;
 
     panel.classList.add('open');
@@ -92,7 +92,7 @@ export function initDetailPanel({ onAddBucket, onAddRoute, onOpenMap, onSearchNe
       const budget = parseFloat(budgetInput.value) || 0;
       onAddBucket(dest, year, budget, days, ensureCurrentUser());
       const b = document.getElementById('addBucketBtn');
-      b.textContent = '✓ Added!'; b.classList.add('added');
+      b.textContent = 'Added!'; b.classList.add('added');
       setTimeout(() => open(dest), 700);
     };
 

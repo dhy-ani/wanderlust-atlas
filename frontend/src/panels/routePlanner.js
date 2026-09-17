@@ -36,7 +36,7 @@ export function initRoutePlanner({ globe }) {
   async function recompute() {
     badge.textContent = stops.length;
     if (stops.length === 0) {
-      listEl.innerHTML = '<div class="emptyState">No stops yet. Open a destination and hit “➕ Add to route”, or add places from the map.</div>';
+      listEl.innerHTML = '<div class="emptyState">No stops yet. Open a destination and hit “Add to route”, or add places from the map.</div>';
       summaryEl.innerHTML = '';
       globe.setRoute(null);
       return;
@@ -48,7 +48,7 @@ export function initRoutePlanner({ globe }) {
       <div class="routeStop">
         <span class="rsNum">${fromNYC ? i + 1 : i + 1}</span>
         <span class="rsName">${s.name}</span>
-        <button class="rsRemove" data-id="${s.id}">✕</button>
+        <button class="rsRemove" data-id="${s.id}">×</button>
       </div>`).join('');
     listEl.querySelectorAll('.rsRemove').forEach((b) => (b.onclick = () => removeStop(b.dataset.id)));
 

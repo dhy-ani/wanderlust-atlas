@@ -59,7 +59,7 @@ export function renderBestTime(bt) {
   }).join('');
   return `
     <div class="sectionTitle">Best Time to Travel <span class="srcTag">price + weather</span></div>
-    <div class="bestPick">🌤️ <b>${MONTHS[best.month - 1]}</b> — cheap tickets ($${Math.round(best.price)}) &amp; great weather (comfort ${best.comfort_score})</div>
+    <div class="bestPick"><b>${MONTHS[best.month - 1]}</b> — cheap tickets ($${Math.round(best.price)}) &amp; great weather (comfort ${best.comfort_score})</div>
     <div class="btChart">${bars}</div>
     <div class="btAxis">${MONTHS.map((m) => `<span>${m[0]}</span>`).join('')}</div>
   `;

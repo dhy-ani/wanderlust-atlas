@@ -53,7 +53,7 @@ export function initNegotiationPanel({ getBucketDestinations }) {
         <h4>Run it locally to try this feature</h4>
         <div class="hintSmall">
           <code>docker compose up --build</code> — then open
-          <b>http://localhost:8080</b> and click <b>🤝 Group Plan</b> again.
+          <b>http://localhost:8080</b> and click <b>Group Plan</b> again.
         </div>
       </div>`;
   }
@@ -190,7 +190,7 @@ export function initNegotiationPanel({ getBucketDestinations }) {
         <h4>Shared wishlist — anyone in the group can add</h4>
         <div class="hintSmall">Add a destination from your own Bucket List to the group's shared list.</div>
         <select id="ngWishAddSelect">${destOptions()}</select>
-        <button id="ngWishAddBtn">➕ Add to group wishlist</button>
+        <button id="ngWishAddBtn">Add to group wishlist</button>
         <div id="ngWishlist" class="negoItems">Loading…</div>
       </div>
 
@@ -200,8 +200,8 @@ export function initNegotiationPanel({ getBucketDestinations }) {
           this ONE destination, picked from what the group likes (GraphRAG) plus what's
           trending on Reddit, never over budget. Picks from the shared wishlist above.</div>
         <select id="ngDestSelect"><option value="">— add to the wishlist above first —</option></select>
-        <button id="ngPreviewBtn">👀 Preview Agent's Route</button>
-        <button id="ngProposeBtn">🤝 Start Negotiation</button>
+        <button id="ngPreviewBtn">Preview Agent's Route</button>
+        <button id="ngProposeBtn">Start Negotiation</button>
         <div id="ngProposeStatus" class="negoStatus"></div>
       </div>
       <div id="ngPreview" class="negoItems"></div>
@@ -224,7 +224,7 @@ export function initNegotiationPanel({ getBucketDestinations }) {
           accessibility_needs: document.getElementById('ngAccessibility').value.trim(),
           notes: document.getElementById('ngNotes').value.trim(),
         });
-        status.textContent = '✓ Saved your preferences';
+        status.textContent = 'Saved your preferences';
       } catch (e) { status.textContent = `Failed: ${e.message}`; }
     };
 
@@ -235,7 +235,7 @@ export function initNegotiationPanel({ getBucketDestinations }) {
       if (!start_date || !end_date) { status.textContent = 'Pick both dates.'; return; }
       try {
         await post(`/group/${group.id}/availability`, { start_date, end_date });
-        status.textContent = '✓ Added your availability';
+        status.textContent = 'Added your availability';
       } catch (e) { status.textContent = `Failed: ${e.message}`; }
     };
     document.getElementById('ngOverlapBtn').onclick = async () => {
@@ -274,7 +274,7 @@ export function initNegotiationPanel({ getBucketDestinations }) {
         ? items.map((it) => `
             <div class="negoWishItem">
               <span><b>${it.name}</b> <span class="negoVia">added by ${it.added_by}</span></span>
-              <button data-id="${it.id}" class="rsRemove">✕</button>
+              <button data-id="${it.id}" class="rsRemove">×</button>
             </div>`).join('')
         : '<div class="hintSmall">Nothing yet — add a destination above.</div>';
       el.querySelectorAll('.rsRemove').forEach((b) => {
@@ -325,7 +325,7 @@ export function initNegotiationPanel({ getBucketDestinations }) {
     transcript.innerHTML = '';
     try {
       const result = await post('/negotiate/run', { group_id: group.id, destination_id: destId, max_rounds: 5 });
-      status.textContent = `${result.accepted ? '✅ Accepted' : '⏱️ Hit round limit'} — final score ${result.final_score} ` +
+      status.textContent = `${result.accepted ? 'Accepted' : 'Hit round limit'} — final score ${result.final_score} ` +
         `(engine: ${result.engine}, LLM calls: ${result.llm_calls_made}, cache hits: ${result.cache_hits})`;
       transcript.innerHTML = result.rounds.map((r) => `
         <div class="negoRound">
@@ -337,7 +337,7 @@ export function initNegotiationPanel({ getBucketDestinations }) {
               <div class="negoReason">${v.reasoning}</div>
             </div>`).join('')}
         </div>`).join('') +
-        (result.narrative ? `<details class="negoNarrative"><summary>📝 Documentation Agent's full record</summary><pre>${result.narrative.replace(/</g, '&lt;')}</pre></details>` : '');
+        (result.narrative ? `<details class="negoNarrative"><summary>Documentation Agent's full record</summary><pre>${result.narrative.replace(/</g, '&lt;')}</pre></details>` : '');
     } catch (e) {
       status.textContent = `Failed: ${e.message}`;
     }

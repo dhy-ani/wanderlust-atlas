@@ -129,10 +129,10 @@ export function initMapPanel({ onPinGlobe, onAddRoute, onAddDestination }) {
             <div class="pcMeta">${p.category || 'place'}${p.rating ? ' · ★ ' + p.rating : ''} · ${data.source}</div>
           </div>
           <div class="pcBtns">
-            <button data-act="focus" data-i="${i}" title="Show on map">🗺️</button>
-            <button data-act="pin" data-i="${i}" title="Pin on globe">📍</button>
-            <button data-act="route" data-i="${i}" title="Add to route">➕</button>
-            <button data-act="dest" data-i="${i}" title="Add as destination">⭐</button>
+            <button data-act="focus" data-i="${i}" title="Show on map">Map</button>
+            <button data-act="pin" data-i="${i}" title="Pin on globe">Pin</button>
+            <button data-act="route" data-i="${i}" title="Add to route">Route</button>
+            <button data-act="dest" data-i="${i}" title="Add as destination">Add</button>
           </div>
         </div>`).join('');
       listEl.querySelectorAll('button').forEach((btn) => {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Wanderlust Atlas</title>
+  <title>The Atlas</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Spectral:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
@@ -13,7 +13,7 @@
 
   <header>
     <div class="title-block">
-      <h1>The <em>Wanderlust</em> Atlas</h1>
+      <h1>The <em>Atlas</em></h1>
       <div class="sub">real satellite globe · live flights from JFK/EWR · ML price forecasts</div>
     </div>
     <div class="stat"><b id="statCount">0</b>on the list</div>
@@ -27,23 +27,23 @@
   <div id="hint">drag to rotate · click a pin to explore</div>
 
   <div class="toolbar">
-    <button id="addDestToggle">＋ Bucket List</button>
-    <button id="routeToggle">🧭 Route Planner <span class="badge" id="routeBadge">0</span></button>
-    <button id="bucketToggle">✦ Travel Planner <span class="badge" id="bucketBadge">0</span></button>
-    <button id="negotiationToggle">🤝 Group Plan</button>
+    <button id="addDestToggle">+ Bucket List</button>
+    <button id="routeToggle">Route Planner <span class="badge" id="routeBadge">0</span></button>
+    <button id="bucketToggle">Travel Planner <span class="badge" id="bucketBadge">0</span></button>
+    <button id="negotiationToggle">Group Plan</button>
   </div>
 
   <!-- Detail panel (right) -->
   <div id="detailPanel">
-    <button class="closeBtn" id="closeDetail">✕</button>
+    <button class="closeBtn" id="closeDetail">×</button>
     <div class="panelScroll" id="panelScroll"></div>
   </div>
 
   <!-- Route planner (left drawer) -->
   <div id="routePanel">
     <div class="routeHead">
-      <h3>🧭 Route Planner</h3>
-      <button class="closeBtn dark" id="closeRoute">✕</button>
+      <h3>Route Planner</h3>
+      <button class="closeBtn dark" id="closeRoute">×</button>
     </div>
     <div class="routeOpts">
       <label><input type="checkbox" id="optFromNYC" checked /> Start from New York</label>
@@ -58,7 +58,7 @@
   <div id="bucketDrawer">
     <div class="drawerHead">
       <h3>My Travel Plan</h3>
-      <button class="closeDrawer" id="closeDrawer">✕</button>
+      <button class="closeDrawer" id="closeDrawer">×</button>
     </div>
     <div class="drawerBody">
       <div class="yearsCol" id="yearsCol"></div>
@@ -70,8 +70,8 @@
   <div id="addDestModal">
     <div class="addDestBox">
       <div class="addDestHead">
-        <h3>＋ Add a Destination</h3>
-        <button class="closeBtn dark" id="closeAddDest">✕</button>
+        <h3>+ Add a Destination</h3>
+        <button class="closeBtn dark" id="closeAddDest">×</button>
       </div>
       <p class="addDestHint">Search any place in the world. Adding it drops a pin on the globe and gives it live flights, ML price forecasts, weather &amp; bucket-list planning.</p>
       <div class="searchRow">
@@ -86,8 +86,8 @@
   <div id="negotiationModal">
     <div class="negoBox">
       <div class="negoHead">
-        <h3>🤝 Group Trip Plan</h3>
-        <button class="closeBtn dark" id="closeNegotiation">✕</button>
+        <h3>Group Trip Plan</h3>
+        <button class="closeBtn dark" id="closeNegotiation">×</button>
       </div>
       <div id="negotiationBody" class="negoBody"></div>
     </div>
@@ -102,7 +102,7 @@
         <button class="viewBtn active" data-mode="satellite">Satellite</button>
         <span id="svBtnWrap"><button class="viewBtn" data-mode="street">Street View</button></span>
       </div>
-      <button class="closeBtn dark" id="closeMap">✕</button>
+      <button class="closeBtn dark" id="closeMap">×</button>
     </div>
     <div class="mapBody">
       <div class="mapStage">
@@ -114,7 +114,7 @@
           <input id="placeSearchInput" placeholder="Search a place (e.g. museum, cafe)…" />
           <button id="placeSearchBtn">Go</button>
         </div>
-        <button id="nearbyBtn" class="nearbyBtn">🔍 Nearby famous places</button>
+        <button id="nearbyBtn" class="nearbyBtn">Nearby famous places</button>
         <div id="placeResults" class="placeResults"></div>
       </div>
     </div>

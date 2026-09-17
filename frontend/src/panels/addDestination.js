@@ -37,7 +37,7 @@ export function initAddDestination({ onAdd }) {
       results.querySelectorAll('.addOneBtn').forEach((b) => {
         b.onclick = async () => {
           b.disabled = true; b.textContent = '…';
-          try { await onAdd(data.results[+b.dataset.i]); b.textContent = '✓ Added'; }
+          try { await onAdd(data.results[+b.dataset.i]); b.textContent = 'Added'; }
           catch (e) { b.disabled = false; b.textContent = 'Retry'; }
         };
       });

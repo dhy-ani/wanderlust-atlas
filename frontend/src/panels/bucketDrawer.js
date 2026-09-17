@@ -75,7 +75,7 @@ export function initBucketDrawer() {
             <input type="number" class="bcDaysInput" data-idx="${it._idx}" value="${it.days}" min="1" max="60"/> days ·
             $${(it.budget * people).toLocaleString()}</div>
           <div class="bcAddedBy">added by ${it.addedBy || 'Guest'}</div></div>
-          <button class="bcRemove" data-idx="${it._idx}">✕</button></div>`).join('')}
+          <button class="bcRemove" data-idx="${it._idx}">×</button></div>`).join('')}
       </div>`).join('');
     yearsCol.querySelectorAll('.bcRemove').forEach((b) => (b.onclick = () => remove(+b.dataset.idx)));
     yearsCol.querySelectorAll('.bcDaysInput').forEach((inp) => {
