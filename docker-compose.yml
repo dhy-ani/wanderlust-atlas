@@ -15,11 +15,10 @@ services:
     image: wanderlust-backend
     environment:
       # Optional keys — default to empty so it runs with nothing configured.
-      AMADEUS_CLIENT_ID: ${AMADEUS_CLIENT_ID:-}
-      AMADEUS_CLIENT_SECRET: ${AMADEUS_CLIENT_SECRET:-}
-      AMADEUS_ENV: ${AMADEUS_ENV:-test}
-      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:-}
       GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
+      TAVILY_API_KEY: ${TAVILY_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      JWT_SECRET: ${JWT_SECRET:-}
       USE_MOCK_DATA: ${USE_MOCK_DATA:-false}
       # Persist custom destinations onto the mounted volume (survives restarts).
       CUSTOM_DEST_FILE: /app/persist/custom_destinations.json

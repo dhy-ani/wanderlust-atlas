@@ -14,10 +14,20 @@
   <header>
     <div class="title-block">
       <h1>The <em>Atlas</em></h1>
-      <div class="sub">real satellite globe · live flights from JFK/EWR · ML price forecasts</div>
+      <div class="sub">real satellite globe · live web-sourced flights &amp; best-time data</div>
     </div>
-    <div class="stat"><b id="statCount">0</b>on the list</div>
+    <div class="stat"><b id="statCount">0</b>on the list<div id="whoAmI" style="margin-top:6px;"></div></div>
   </header>
+
+  <!-- Sign-in gate: blocks the app until a real account is signed in. Each
+       account's atlas is theirs alone (see routers/atlas.py). -->
+  <div id="authGate">
+    <div class="negoBox">
+      <div class="negoHead"><h3>Sign in to The Atlas</h3></div>
+      <div class="negoIntro">Your atlas is personal — sign in to see and build your own list of destinations. A new account always starts empty.</div>
+      <div id="authGateBody" class="negoSplit"></div>
+    </div>
+  </div>
 
   <div id="navList">
     <div class="navHead">Destinations</div>

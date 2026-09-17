@@ -1,7 +1,10 @@
-// App entry point: wires the globe, panels, and backend together.
+// App entry point: wires the globe, panels, and backend together. The atlas
+// (destination list) is per-account now — nothing renders until sign-in, and
+// what renders comes entirely from the backend (GET /api/atlas), never a
+// hardcoded array. A brand-new account always starts empty.
 import './styles/main.css';
-import { DESTINATIONS, byId, addRuntimeDestination, removeRuntimeDestination, getHiddenBuiltins, hideBuiltinDestination } from './data/destinations.js';
-import { api } from './api.js';
+import { api, USE_STATIC } from './api.js';
+import { getUser } from './auth.js';
 import { initGlobe } from './globe/globe.js';
 import { initDetailPanel } from './panels/detailPanel.js';
 import { initMapPanel } from './panels/mapPanel.js';
@@ -9,21 +12,15 @@ import { initRoutePlanner } from './panels/routePlanner.js';
 import { initBucketDrawer } from './panels/bucketDrawer.js';
 import { initAddDestination } from './panels/addDestination.js';
 import { initNegotiationPanel } from './panels/negotiationPanel.js';
-import { ensureCurrentUser } from './identity.js';
+import { initAuthGate } from './panels/authGate.js';
 
-// Drop any built-ins the user previously hid, before anything renders.
-const hiddenIds = new Set(getHiddenBuiltins());
-if (hiddenIds.size) {
-  for (let i = DESTINATIONS.length - 1; i >= 0; i--) {
-    if (hiddenIds.has(DESTINATIONS[i].id)) DESTINATIONS.splice(i, 1);
-  }
-}
+let atlas = [];
+const byId = (id) => atlas.find((d) => d.id === id);
 
 // ---- globe ----
 const globe = initGlobe(document.getElementById('globeCanvas'), {
   onSelect: (id) => selectDestination(id),
 });
-globe.addDestinations(DESTINATIONS);
 
 // ---- panels ----
 const bucket = initBucketDrawer();
@@ -57,7 +54,6 @@ function addNavItem(d, index = document.querySelectorAll('.navItem').length) {
   el.onclick = () => selectDestination(d.id);
   navList.appendChild(el);
 }
-DESTINATIONS.forEach((d, i) => addNavItem(d, i));
 
 function selectDestination(id) {
   const d = byId(id);
@@ -68,49 +64,56 @@ function selectDestination(id) {
   detail.open(d);
 }
 
-// ---- add / remove custom destinations ----
+// ---- add / remove atlas destinations ----
 async function addDestinationFromPlace(place) {
-  const addedBy = ensureCurrentUser();
   const payload = {
     name: place.name,
-    country: place.country || (place.address ? place.address.split(',').slice(-1)[0].trim() : 'Custom pin'),
+    country: place.country || (place.address ? place.address.split(',').slice(-1)[0].trim() : ''),
     lat: place.lat,
     lng: place.lng,
-    added_by: addedBy,
   };
-  const dest = await api.addDestination(payload); // backend fills id, nearest airport, defaults
-  addRuntimeDestination(dest);
+  const dest = await api.addToAtlas(payload); // backend fills id + defaults
+  atlas.push(dest);
   addNavItem(dest);
   globe.removePin('place:' + place.name); // clear any transient search pin for the same spot
   globe.addDestination(dest);
   document.getElementById('addDestModal').classList.remove('open');
 
   // Adding a destination IS planning to go there — it becomes a bucket-list entry
-  // right away (default: next year), attributed to whoever added it.
+  // right away (default: next year), attributed to the signed-in user.
   const nextYear = new Date().getFullYear() + 1;
-  bucket.add(dest, nextYear, dest.budgetLow * dest.days, dest.days, addedBy);
+  bucket.add(dest, nextYear, dest.budgetLow * dest.days, dest.days, getUser()?.name || 'Guest');
 
   selectDestination(dest.id);
   return dest;
 }
 
 async function removeDestination(dest) {
-  if (dest.custom) {
-    try { await api.deleteDestination(dest.id); } catch (e) { /* still remove locally */ }
-    removeRuntimeDestination(dest.id);
-  } else {
-    // Built-ins are shared data — hide it from this browser only, persisted locally.
-    hideBuiltinDestination(dest.id);
-  }
+  try { await api.removeFromAtlas(dest.id); } catch (e) { /* still remove locally */ }
+  atlas = atlas.filter((d) => d.id !== dest.id);
   globe.removePin(dest.id);
   document.querySelector(`.navItem[data-id="${dest.id}"]`)?.remove();
 }
 
-// ---- restore previously-saved custom destinations from the backend ----
-api.destinations().then((list) => {
-  list.filter((d) => d.custom && !byId(d.id)).forEach((d) => {
-    addRuntimeDestination(d);
-    addNavItem(d);
-    globe.addDestination(d);
-  });
-}).catch(() => {});
+// ---- boot: nothing renders until sign-in, then load this account's atlas ----
+async function loadAtlas() {
+  try {
+    atlas = await api.atlas();
+  } catch (e) {
+    console.error('Failed to load your atlas:', e);
+    atlas = [];
+  }
+  navList.innerHTML = '';
+  globe.addDestinations(atlas);
+  atlas.forEach((d, i) => addNavItem(d, i));
+  document.getElementById('statCount').textContent = atlas.length;
+}
+
+// GitHub Pages has no backend to sign in against — the static demo skips the
+// gate entirely and uses a device-local atlas (see staticApi.js).
+if (USE_STATIC) {
+  document.getElementById('authGate').classList.add('hidden');
+  loadAtlas();
+} else {
+  initAuthGate({ onSignedIn: loadAtlas });
+}

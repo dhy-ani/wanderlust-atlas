@@ -8,11 +8,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.agents import live_data_agent
 from app.config import get_settings
 from app.db.engine import init_db
 from app.routers import (
-    auth, availability, destinations, flights, group, negotiate, places,
-    predictions, research, routes, survey, weather, wishlist,
+    atlas, auth, availability, flights, group, negotiate, places,
+    predictions, research, routes, survey, wishlist,
 )
 
 settings = get_settings()
@@ -27,7 +28,7 @@ async def _lifespan(_app: FastAPI):
 app = FastAPI(
     title="Wanderlust Atlas API",
     version="1.0.0",
-    description="Flights, weather, ML price prediction, places, routes, and multi-agent group trip planning.",
+    description="Real accounts, a personal atlas, live web-sourced flight/best-time/trade-off data, places, routes, and multi-agent group trip planning.",
     lifespan=_lifespan,
 )
 
@@ -38,9 +39,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(destinations.router)
+app.include_router(atlas.router)
 app.include_router(flights.router)
-app.include_router(weather.router)
 app.include_router(places.router)
 app.include_router(predictions.router)
 app.include_router(routes.router)
@@ -59,9 +59,7 @@ def health():
     return {
         "status": "ok",
         "live": {
-            "flights_amadeus": settings.has_amadeus,
-            "weather_openweather": settings.has_weather,
+            "live_data_agent": live_data_agent.is_configured(),
             "places_google": settings.has_places,
         },
-        "mock_forced": settings.use_mock_data,
     }

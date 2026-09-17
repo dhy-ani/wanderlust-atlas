@@ -5,10 +5,6 @@ email-validator==2.3.0
 pydantic-settings==2.7.0
 httpx==0.28.1
 python-dotenv==1.0.1
-scikit-learn==1.5.2
-pandas==2.2.3
-numpy==2.1.3
-joblib==1.4.2
 pytest==8.3.4
 
 # --- accounts + persistent storage (SQLite locally, Postgres on Vercel) ---
@@ -16,3 +12,11 @@ sqlalchemy==2.0.36
 bcrypt==4.2.1
 pyjwt==2.10.1
 psycopg2-binary==2.9.10   # only imported when DATABASE_URL is a postgres:// URL
+
+# --- live web-sourced travel data (agents/live_data_agent.py) — core now, not
+# optional: flights/best-time/trade-off have no other data source. Works without
+# these installed too (falls back to a clear "not configured" result), but real
+# data requires them + TAVILY_API_KEY/OPENROUTER_API_KEY.
+langchain-core==0.3.31
+langchain-openai==0.3.1
+tavily-python==0.5.0

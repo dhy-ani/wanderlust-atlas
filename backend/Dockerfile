@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
 # ---------------------------------------------------------------------------
-#  Backend image — FastAPI + the trained ML price model.
-#  Single stage: the Python data libs ship as prebuilt wheels, so we don't need
-#  a separate compiler/build stage. We DO order the steps so Docker's layer
-#  cache is used well (dependencies before code — see docs/DOCKER.md).
+#  Backend image — FastAPI. Single stage: the Python deps ship as prebuilt
+#  wheels, so we don't need a separate compiler/build stage. We DO order the
+#  steps so Docker's layer cache is used well (dependencies before code — see
+#  docs/DOCKER.md).
 # ---------------------------------------------------------------------------
 FROM python:3.12-slim
 
@@ -36,11 +36,7 @@ RUN if [ "$INSTALL_AGENT_EXTRAS" = "1" ]; then \
 COPY app ./app
 COPY data ./data
 
-# 3) Train the ML model at build time so the image is ready to serve instantly
-#    (no train step needed on the target laptop). Writes data/models/*.joblib.
-RUN python -m app.ml.train
-
-# 4) Run as a non-root user. Pre-create the persistence dir and give it to the
+# 3) Run as a non-root user. Pre-create the persistence dir and give it to the
 #    user so the mounted volume inherits writable ownership on first run.
 RUN useradd --create-home appuser \
     && mkdir -p /app/persist \

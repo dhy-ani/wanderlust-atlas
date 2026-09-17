@@ -78,6 +78,30 @@ class Identity(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_now, onupdate=_now)
 
 
+class UserDestination(Base):
+    """One destination in ONE user's personal atlas — replaces the old global,
+    unauthenticated `destinations.json` + `custom_destinations.json` file store.
+    Every user's globe starts empty except a one-time seed for the original
+    account (see routers/atlas.py); nothing here is shared between accounts."""
+    __tablename__ = "user_destinations"
+    __table_args__ = (UniqueConstraint("user_id", "dest_key", name="uq_user_dest"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    dest_key: Mapped[str] = mapped_column(String(160))
+    name: Mapped[str] = mapped_column(String(200))
+    country: Mapped[str] = mapped_column(String(200), default="")
+    lat: Mapped[float] = mapped_column(default=0.0)
+    lng: Mapped[float] = mapped_column(default=0.0)
+    airport: Mapped[str] = mapped_column(String(10), default="")
+    days: Mapped[int] = mapped_column(default=4)
+    budget_low: Mapped[int] = mapped_column(default=100)
+    budget_high: Mapped[int] = mapped_column(default=200)
+    tagline: Mapped[str] = mapped_column(Text, default="")
+    content: Mapped[dict] = mapped_column(JSON, default=dict)  # attractions/activities/famous
+    custom: Mapped[bool] = mapped_column(default=True)
+    added_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
 class WishlistItem(Base):
     """A shared, group-visible wishlist entry — any member can add one; every
     member of the group sees the same list (unlike the personal, solo,

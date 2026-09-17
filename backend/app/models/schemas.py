@@ -8,71 +8,12 @@ from pydantic import BaseModel, Field
 
 
 # --------------------------------------------------------------------------- #
-#  Flights
+#  Flights / best-time / trade-off — real web-search-derived data only.
+#  See agents/live_data_agent.py: every response is a free-form dict with a
+#  "status" field ("ok" | "not_configured" | "error"), not a rigid schema,
+#  since the shape depends on what the search actually found. No response_model
+#  is declared on those routes for that reason.
 # --------------------------------------------------------------------------- #
-class FlightOffer(BaseModel):
-    origin: str
-    destination: str
-    price_usd: float
-    currency: str = "USD"
-    airline: str
-    stops: int
-    depart_date: str
-    return_date: Optional[str] = None
-    duration: str            # e.g. "14h 20m"
-    deep_link: Optional[str] = None
-    source: Literal["amadeus", "mock"] = "mock"
-
-
-class FlightSearchResponse(BaseModel):
-    origin: str
-    destination: str
-    cheapest: Optional[FlightOffer]
-    offers: list[FlightOffer]
-    source: Literal["amadeus", "mock"]
-
-
-# --------------------------------------------------------------------------- #
-#  Weather
-# --------------------------------------------------------------------------- #
-class MonthWeather(BaseModel):
-    month: int               # 1..12
-    month_name: str
-    avg_temp_c: float
-    rain_mm: float
-    comfort_score: float = Field(..., ge=0, le=100)  # higher = nicer to visit
-
-
-class WeatherResponse(BaseModel):
-    destination_id: str
-    months: list[MonthWeather]
-    best_months: list[str]
-    source: Literal["openweather", "climate-model", "mock"]
-
-
-# --------------------------------------------------------------------------- #
-#  ML price prediction
-# --------------------------------------------------------------------------- #
-class PricePoint(BaseModel):
-    days_before_departure: int
-    predicted_price_usd: float
-
-
-class PricePrediction(BaseModel):
-    destination_id: str
-    origin: str
-    depart_month: int
-    current_days_out: int
-    predicted_price_now: float
-    cheapest_price: float
-    cheapest_days_out: int
-    expected_drop_pct: float          # how much cheaper the trough is vs now
-    recommendation: str               # "BOOK NOW" | "WAIT" | ...
-    best_month_to_fly: int
-    best_month_price: float
-    curve: list[PricePoint]           # price vs. days-before-departure
-    monthly: list[float]              # 12 avg predicted prices, Jan..Dec
-    model: Literal["gradient-boosting", "heuristic"]
 
 
 # --------------------------------------------------------------------------- #
@@ -86,13 +27,13 @@ class Place(BaseModel):
     address: Optional[str] = None
     country: Optional[str] = None
     rating: Optional[float] = None
-    source: Literal["google", "nominatim", "mock"] = "mock"
+    source: Literal["google", "nominatim"] = "nominatim"
 
 
 class PlacesResponse(BaseModel):
     query: str
     results: list[Place]
-    source: Literal["google", "nominatim", "mock"]
+    source: Literal["google", "nominatim", "unavailable"]
 
 
 # --------------------------------------------------------------------------- #

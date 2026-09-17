@@ -1,8 +1,10 @@
 """Places search: 'find famous places near a destination' and free-text lookup.
 
-Uses Google Places (Text Search + Nearby Search) when a key is present, otherwise
-falls back to keyless OpenStreetMap Nominatim, and finally to mock POIs. This backs
-the frontend's "search other nearby famous places / type it in manually" feature.
+Uses Google Places (Text Search + Nearby Search) when a key is present,
+otherwise falls back to keyless, real OpenStreetMap Nominatim search. No
+further fallback: if both fail, results come back empty with source
+"unavailable" rather than fabricated POIs. This backs the frontend's "search
+other nearby famous places / type it in manually" feature.
 """
 from __future__ import annotations
 
@@ -12,7 +14,6 @@ import httpx
 
 from app.config import get_settings
 from app.models.schemas import Place, PlacesResponse
-from app.services.mock_data import mock_places
 
 # Nominatim's `display_name`/Google's `name` sometimes append the local-script
 # name after the English one (e.g. "Marrakech ⵎⵕⵕⴰⴽⵯⵛ مراكش"). Requesting
@@ -118,8 +119,8 @@ async def geocode(query: str) -> PlacesResponse:
             if out:
                 return PlacesResponse(query=query, results=out, source="nominatim")
     except Exception as exc:
-        print(f"[nominatim-geocode] fallback to mock: {exc}")
-    return PlacesResponse(query=query, results=mock_places(query, 20, 0), source="mock")
+        print(f"[nominatim-geocode] failed: {exc}")
+    return PlacesResponse(query=query, results=[], source="unavailable")
 
 
 async def search_places(query: str, lat: float, lng: float, radius_m: int = 40000) -> PlacesResponse:
@@ -137,5 +138,5 @@ async def search_places(query: str, lat: float, lng: float, radius_m: int = 4000
         if results:
             return PlacesResponse(query=query, results=results, source="nominatim")
     except Exception as exc:
-        print(f"[nominatim] fallback to mock: {exc}")
-    return PlacesResponse(query=query, results=mock_places(query, lat, lng), source="mock")
+        print(f"[nominatim] failed: {exc}")
+    return PlacesResponse(query=query, results=[], source="unavailable")

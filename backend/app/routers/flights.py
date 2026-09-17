@@ -1,23 +1,25 @@
-"""Live flight prices from JFK / EWR to a destination's nearest airport."""
+"""Flight prices — real web-search-derived data only. No mock fallback: if
+TAVILY_API_KEY/OPENROUTER_API_KEY aren't configured, or the search comes up
+empty, this returns status="not_configured"/"error" and the frontend shows
+that honestly instead of a fabricated number."""
 from datetime import date, timedelta
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Query
 
-from app.models.schemas import FlightSearchResponse
-from app.services.amadeus_client import search_flights
-from app.services.destinations import by_id
+from app.agents import live_data_agent
 
 router = APIRouter(prefix="/api/flights", tags=["flights"])
 
+_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-@router.get("", response_model=FlightSearchResponse)
+
+@router.get("")
 async def flights(
-    dest_id: str = Query(..., description="destination id"),
+    destination_name: str = Query(..., description="destination name, e.g. 'Paris'"),
+    destination_country: str = Query("", description="destination country/region, for search accuracy"),
     origin: str = Query("JFK", pattern="^(JFK|EWR)$"),
     depart: str | None = Query(None, description="YYYY-MM-DD; defaults to 60 days out"),
 ):
-    if by_id(dest_id) is None:
-        raise HTTPException(404, f"unknown destination '{dest_id}'")
     depart_date = date.fromisoformat(depart) if depart else date.today() + timedelta(days=60)
-    days_out = (depart_date - date.today()).days
-    return await search_flights(origin, dest_id, depart_date, max(days_out, 1))
+    month_name = _MONTHS[depart_date.month - 1]
+    return live_data_agent.search_flight_prices(origin, destination_name, destination_country, month_name)

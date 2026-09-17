@@ -193,6 +193,12 @@ header .stat b{color:var(--brass-bright);font-size:20px;font-weight:600;display:
 .addOneBtn:hover{background:var(--brass-bright);}
 .addOneBtn:disabled{background:var(--pine);color:var(--text-light);cursor:default;}
 
+/* SIGN-IN GATE */
+#authGate{position:absolute;inset:0;z-index:60;background:rgba(54,37,39,.94);display:flex;align-items:center;justify-content:center;padding:20px;}
+#authGate.hidden{display:none;}
+#whoAmI{font-family:var(--font-ui);font-size:11px;}
+#whoAmI a{color:var(--brass-bright);cursor:pointer;text-decoration:underline;}
+
 /* GROUP NEGOTIATION modal */
 #negotiationModal{position:absolute;inset:0;z-index:46;background:rgba(54,37,39,.82);display:none;align-items:flex-start;justify-content:center;padding:5vh 20px;overflow-y:auto;}
 #negotiationModal.open{display:flex;}
