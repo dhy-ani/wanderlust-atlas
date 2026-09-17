@@ -32,7 +32,7 @@ def test_new_user_starts_with_empty_atlas():
     token = _signup(email="fresh_user@example.com")
     r = client.get("/api/atlas", headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 200
-    assert r.json() == []  # not Dhyani's account -> no seed data
+    assert r.json() == []  # no seed/shared data for anyone -- every account starts empty
 
 
 def test_add_and_remove_atlas_destination():

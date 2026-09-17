@@ -1,19 +1,12 @@
 """A signed-in user's personal atlas (the solo globe's destination list) —
 replaces the old global, unauthenticated `destinations.json` +
-`custom_destinations.json` file store. Every destination here belongs to
-exactly one account; nothing is shared between users.
-
-One account is special-cased: the account signed up with the project owner's
-own email gets a one-time seed of her original 15 favorite destinations (rich
-content in data/dhyani_seed.json) on her very first `GET`. Every other account
-starts completely empty and builds their own atlas from scratch.
-"""
+`custom_destinations.json` file store. Every destination belongs to exactly
+one account, added by that account, with no shared/seeded/hardcoded starting
+data for anyone — every new account starts completely empty."""
 from __future__ import annotations
 
-import json
 import re
 import secrets
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -25,9 +18,6 @@ from app.db.models import User, UserDestination
 from app.services.destinations import register_custom
 
 router = APIRouter(prefix="/api/atlas", tags=["atlas"])
-
-SEED_PATH = Path(__file__).resolve().parents[2] / "data" / "dhyani_seed.json"
-SEED_OWNER_EMAIL = "dasdhyanisoni@gmail.com"
 
 
 class NewAtlasDestination(BaseModel):
@@ -57,28 +47,9 @@ def _serialize(row: UserDestination) -> dict:
     }
 
 
-def _seed_owner_atlas(db: Session, user_id: int) -> list[UserDestination]:
-    seed = json.loads(SEED_PATH.read_text(encoding="utf-8"))
-    rows = []
-    for d in seed:
-        row = UserDestination(
-            user_id=user_id, dest_key=d["id"], name=d["name"], country=d.get("country", ""),
-            lat=d["lat"], lng=d["lng"], airport=d.get("airport", ""), days=d.get("days", 4),
-            budget_low=d.get("budgetLow", 100), budget_high=d.get("budgetHigh", 200),
-            tagline=d.get("tagline", ""), custom=False,
-            content={k: d[k] for k in ("attractions", "activities", "famous") if k in d},
-        )
-        db.add(row)
-        rows.append(row)
-    db.commit()
-    return rows
-
-
 @router.get("")
 def list_my_atlas(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     rows = db.query(UserDestination).filter_by(user_id=user.id).order_by(UserDestination.added_at).all()
-    if not rows and user.email.lower() == SEED_OWNER_EMAIL:
-        rows = _seed_owner_atlas(db, user.id)
     return [_serialize(r) for r in rows]
 
 
