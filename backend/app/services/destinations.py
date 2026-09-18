@@ -14,11 +14,14 @@ from functools import lru_cache
 from math import asin, cos, radians, sin, sqrt
 from pathlib import Path
 
+from app.agents.storage_paths import data_path
+
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 DATA_PATH = DATA_DIR / "destinations.json"
 # Where user-added destinations are persisted. Overridable via env so it can point
-# at a mounted Docker volume (see docker-compose.yml -> CUSTOM_DEST_FILE).
-CUSTOM_PATH = Path(os.environ.get("CUSTOM_DEST_FILE", str(DATA_DIR / "custom_destinations.json")))
+# at a mounted Docker volume (see docker-compose.yml -> CUSTOM_DEST_FILE); on
+# Vercel's read-only filesystem this resolves to /tmp instead (see storage_paths.py).
+CUSTOM_PATH = Path(os.environ["CUSTOM_DEST_FILE"]) if os.environ.get("CUSTOM_DEST_FILE") else data_path("custom_destinations.json")
 
 # New York origin airports the whole app prices from.
 NYC_ORIGINS = {"JFK": (40.6413, -73.7781), "EWR": (40.6895, -74.1745)}

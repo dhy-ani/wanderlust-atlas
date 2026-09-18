@@ -10,10 +10,11 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
-from pathlib import Path
 from threading import Lock
 
-CACHE_PATH = Path(__file__).resolve().parents[2] / "data" / "llm_cache.sqlite3"
+from app.agents.storage_paths import sqlite_path
+
+CACHE_PATH = sqlite_path("llm_cache.sqlite3")
 _lock = Lock()
 
 

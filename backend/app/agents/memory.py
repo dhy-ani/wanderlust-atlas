@@ -9,9 +9,10 @@ from __future__ import annotations
 import json
 import os
 import re
-from pathlib import Path
 
-FALLBACK_PATH = Path(__file__).resolve().parents[2] / "data" / "memory_fallback.json"
+from app.agents.storage_paths import data_path
+
+FALLBACK_PATH = data_path("memory_fallback.json")
 
 _client = None
 _collection = None
@@ -32,7 +33,7 @@ def _get_collection():
             port = int(os.environ.get("CHROMA_PORT", "8000"))
             _client = chromadb.HttpClient(host=host, port=port)
         else:
-            persist_dir = Path(__file__).resolve().parents[2] / "data" / "chroma"
+            persist_dir = data_path("chroma")
             persist_dir.mkdir(parents=True, exist_ok=True)
             _client = chromadb.PersistentClient(path=str(persist_dir))
         _client.heartbeat()

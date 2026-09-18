@@ -18,10 +18,11 @@ from __future__ import annotations
 
 import os
 import sqlite3
-from pathlib import Path
 from threading import Lock
 
-LOG_PATH = Path(__file__).resolve().parents[2] / "data" / "llm_cache.sqlite3"  # shares the cache db
+from app.agents.storage_paths import sqlite_path
+
+LOG_PATH = sqlite_path("llm_cache.sqlite3")  # shares the cache db
 _lock = Lock()
 
 

@@ -9,10 +9,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from app.agents.storage_paths import data_path
 from app.models.agent_schemas import SurveyEndIn
 
-DATA_DIR = Path(__file__).resolve().parents[2] / "data"
-END_SURVEYS_PATH = DATA_DIR / "end_surveys.json"
+END_SURVEYS_PATH = data_path("end_surveys.json")
 
 _end_surveys: list[dict] = []
 
