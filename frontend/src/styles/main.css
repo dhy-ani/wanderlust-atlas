@@ -194,7 +194,7 @@ header .stat b{color:var(--brass-bright);font-size:20px;font-weight:600;display:
 .addOneBtn:disabled{background:var(--pine);color:var(--text-light);cursor:default;}
 
 /* SIGN-IN GATE */
-#authGate{position:absolute;inset:0;z-index:60;background:rgba(54,37,39,.94);display:flex;align-items:center;justify-content:center;padding:20px;}
+#authGate{position:absolute;inset:0;z-index:60;background:rgba(54,37,39,.94);display:flex;align-items:flex-start;justify-content:center;padding:5vh 20px;overflow-y:auto;}
 #authGate.hidden{display:none;}
 #whoAmI{font-family:var(--font-ui);font-size:11px;}
 #whoAmI a{color:var(--brass-bright);cursor:pointer;text-decoration:underline;}
