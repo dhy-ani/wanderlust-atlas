@@ -14,8 +14,11 @@ venv/
 .coverage
 backend/mutants/
 
-# --- trained ML artifacts (regenerate with `python -m app.ml.train`) ---
-backend/data/models/*.joblib
+# --- Vercel build artifact: vercel.json's buildCommand copies backend/app +
+# backend/data here at deploy time so the Python function bundler (which only
+# reliably packages files inside api/) picks them up. Never commit the copy. ---
+api/app/
+api/data/
 
 # --- user-added custom destinations (runtime state) ---
 backend/data/custom_destinations.json
