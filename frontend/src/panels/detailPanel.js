@@ -53,7 +53,6 @@ export function initDetailPanel({ onAddBucket, onAddRoute, onOpenMap, onSearchNe
 
       <div id="liveIntel" class="liveIntel"><div class="loading">Loading live flights &amp; best-time data…</div></div>
 
-      <div class="sectionTitle">Budget vs. Luxury <span class="srcTag">adjust to compare</span></div>
       <div class="peopleInput">
         <label>Total trip budget ($)</label>
         <input type="number" id="tradeoffBudget" value="${defaultBudget}" min="0" step="50"/>
